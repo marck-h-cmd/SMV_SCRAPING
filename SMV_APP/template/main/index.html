@@ -1,0 +1,109 @@
+<html>
+<head>
+	<title>Ui-ux</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<link rel='stylesheet' href='https://use.fontawesome.com/releases/v5.5.0/css/all.css'>
+  
+  </head>
+<body>
+	<div class="mobi">
+		<header>
+		</header>
+		<div class="option">
+			<p></p>
+			<p></p>
+			<p></p>
+			<p></p>
+			<p></p>
+		</div>
+		<footer class="select">
+			<a href="#"><i class="fas fa-bell"></i></a>
+			<a href="#"><i class="fas fa-camera"></i></a>
+			<a href="#"><i class="fas fa-heart"></i></a>
+			<a href="#"><i class="fas fa-home"></i></a>
+		</footer>
+	</div>
+</body>
+</html>
+
+<style>
+
+    body{
+			background:linear-gradient(to right bottom, #00b3b3, #3333ff);
+			background-position:center;
+			background-repeat:no-repeat;
+			background-size:100%;
+			background-attachment:fixed;
+			font-size:14pt;
+		}
+		.mobi{
+			width:300px;
+			height:500px;
+			border-radius:10px;
+			margin:auto;
+			margin-top:70px;
+			background:#fff;
+			box-shadow:2px 2px 18px 4px rgba(0,0,0,0.5);
+		}
+		.mobi header{
+			background-image:url(https://images.pexels.com/photos/445109/pexels-photo-445109.jpeg?auto=compress&cs=tinysrgb&h=650&w=940);
+			background-position:-200px -160px;
+			background-repeat:no-repeat;
+			-webkit-filter:blur(2px);
+			border:1px solid transparent;
+			width:300px;
+			height:150px;
+			border-radius:20px 20px 400px 400px;
+			margin:0;
+			padding:0;
+			-webkit-transition:filter .50s;
+		}
+		.mobi header:hover{
+			-webkit-filter:blur(0);
+		}
+		.option{
+			margin-top:50px;
+		}
+		.option p:first-child{
+			margin-top:50px;
+		}
+		.option p:last-child{
+			margin-bottom:50px;
+		}
+		.option p{
+			padding:10px 40px;
+			margin:10px 40px;
+			border:none;
+			border-radius:10px;
+			background:#ccc;
+			-webkit-transition:background, cursor, .50s;
+		}
+		.option p:hover{
+			background:#737373;
+			cursor:pointer;
+		}
+		.select{
+			bottom:0;
+			height:45px;
+			margin-top:120px;
+			background:#ccc;
+			border-radius:0 0 10px 10px;
+		}
+		.select a{
+			text-align:center;
+			display:inline-block;
+			margin:0;
+			margin-left:3px;
+			color:#fff;
+			font-size:18pt;
+			padding:10px 20px;
+		}
+		.fas{
+			-webkit-transition:color .50s;
+		}
+		.fas:hover{
+			color:#0073e6;
+		}
+</style>

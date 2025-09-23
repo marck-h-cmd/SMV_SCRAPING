@@ -1,0 +1,9 @@
+selenium
+pandas
+PyMySql
+python-dotenv 
+requests 
+beautifulsoup4
+openpyxl
+xlsxwriter
+lxml
