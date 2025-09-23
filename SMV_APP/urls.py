@@ -16,9 +16,9 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-# from view import acceder
+from .view import acceder
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-  #  path('', acceder,name="index"),
+    path('', acceder,name="index"),
 ]
