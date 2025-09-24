@@ -1,0 +1,101 @@
+import os
+import time
+import random
+import psutil
+import pytesseract
+import pandas as pd
+from io import BytesIO
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+from datetime import datetime, timedelta
+
+class SeleniumWebScraper:
+    
+    def human_delay(min_seg=1, max_seg=3):
+        time.sleep(random.uniform(min_seg, max_seg))
+
+    def iniciar_driver(self):
+        chrome_options = webdriver.ChromeOptions()
+
+        chrome_options.add_argument('--disable-gpu')
+        chrome_options.add_argument('--disable-machine-learning-model-loading')
+        chrome_options.add_argument('--disable-tensorflow-lite-delegate')
+        # activar visualizacion script
+        # chrome_options.add_argument("--headless=new")
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--disable-dev-shm-usage")
+        chrome_options.add_argument("--window-size=1920,1080")
+        chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+        chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        chrome_options.add_experimental_option('useAutomationExtension', False)
+        chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+    
+        chrome_options.add_experimental_option("prefs", {
+            "profile.default_content_setting_values.geolocation": 1,  # Allow location (optional)
+            "profile.default_content_setting_values.notifications": 1,  # Allow notifications (optional)
+            "profile.default_content_setting_values.protocol_handlers": 1,  # Allow opening links
+        })
+        service = Service(ChromeDriverManager().install())
+        driver = webdriver.Chrome(service=service, options=chrome_options)
+
+        driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
+            "source": """
+            Object.defineProperty(navigator, 'webdriver', {
+                get: () => undefined
+            });
+            """
+        })
+
+        return driver
+
+
+
+    def execute(self):
+        driver = None
+        try:
+            driver = self.iniciar_driver()
+            
+            print("Accediendo a página de login...")
+            driver.get("https://www.smv.gob.pe/SIMV/Frm_InformacionFinanciera?data=A70181B60967D74090DCD93C4920AA1D769614EC12")
+            self.human_delay(2, 4)
+            
+            print("Iniciando sesión...")
+            
+            
+            
+            return 0
+
+        except Exception as e:
+            print(f"Error: {str(e)}")
+            if driver:
+                timestamp = time.strftime("%Y%m%d-%H%M%S")
+                archivo_captura = f"error_{timestamp}.png"
+                driver.save_screenshot(archivo_captura)
+            return None
+        
+        finally:
+            if driver:
+                driver.quit()
+                print("🔪 Terminando procesos de Chrome...")
+                self.kill_chrome_processes()
+
+
+
+
+
+
+
+
+
+    def kill_chrome_processes(self):
+        for proc in psutil.process_iter(['pid', 'name']):
+            if proc.info['name'] in ['chrome', 'chromedriver']:
+                try:
+                    proc.kill()
+                except psutil.NoSuchProcess:
+                    pass
