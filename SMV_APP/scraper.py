@@ -10,9 +10,7 @@ import logging
 from pathlib import Path
 
 class SMVFinancialScraper:
-    """
-    Clase robusta para scraping de información financiera de la SMV
-    """
+
     
     def __init__(self, headless=True, download_path=None, timeout=30):
         self.headless = headless
@@ -23,7 +21,6 @@ class SMVFinancialScraper:
         self.setup_logging()
         
     def setup_logging(self):
-        """Configurar logging"""
         logging.basicConfig(
             level=logging.INFO,
             format='%(asctime)s - %(levelname)s - %(message)s'
@@ -31,7 +28,6 @@ class SMVFinancialScraper:
         self.logger = logging.getLogger(__name__)
     
     def setup_driver(self):
-        """Configurar el WebDriver de Chrome"""
         chrome_options = Options()
         
         if self.headless:
@@ -45,7 +41,6 @@ class SMVFinancialScraper:
         chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
         chrome_options.add_experimental_option('useAutomationExtension', False)
         
-        # Configurar descargas
         if not os.path.exists(self.download_path):
             os.makedirs(self.download_path)
         
@@ -68,19 +63,16 @@ class SMVFinancialScraper:
             raise
     
     def wait_for_element(self, by, value, timeout=None):
-        """Esperar por un elemento con reintentos"""
         timeout = timeout or self.timeout
         wait = WebDriverWait(self.driver, timeout)
         return wait.until(EC.presence_of_element_located((by, value)))
     
     def wait_for_element_clickable(self, by, value, timeout=None):
-        """Esperar por un elemento clickeable"""
         timeout = timeout or self.timeout
         wait = WebDriverWait(self.driver, timeout)
         return wait.until(EC.element_to_be_clickable((by, value)))
     
     def safe_click(self, element):
-        """Click seguro con reintentos"""
         attempts = 0
         while attempts < 3:
             try:
@@ -89,23 +81,119 @@ class SMVFinancialScraper:
             except StaleElementReferenceException:
                 attempts += 1
                 time.sleep(1)
+                self.logger.warning(f"Elemento stale detectado, reintentando... intento {attempts}")
         return False
     
+    def find_element_with_retry(self, by, value, max_retries=3):
+        for attempt in range(max_retries):
+            try:
+                element = self.driver.find_element(by, value)
+                return element
+            except StaleElementReferenceException:
+                if attempt < max_retries - 1:
+                    time.sleep(1)
+                    self.logger.warning(f"Elemento stale detectado, reintentando... intento {attempt + 1}")
+                else:
+                    raise
+    
+    def setup_empresa_download_folder(self, empresa_nombre):
+        empresa_clean = "".join(c for c in empresa_nombre if c.isalnum() or c in (' ', '-', '_')).rstrip()
+        empresa_clean = empresa_clean.replace(' ', '_')
+        
+        empresa_path = os.path.join(self.download_path, empresa_clean)
+        if not os.path.exists(empresa_path):
+            os.makedirs(empresa_path)
+        
+        prefs = {
+            "download.default_directory": empresa_path,
+            "download.prompt_for_download": False,
+            "download.directory_upgrade": True,
+            "safebrowsing.enabled": True,
+            "profile.default_content_settings.popups": 0
+        }
+        self.driver.execute_cdp_cmd('Page.setDownloadBehavior', {
+            'behavior': 'allow',
+            'downloadPath': empresa_path
+        })
+        
+        self.current_download_path = empresa_path
+        return empresa_path
+    
+    def rename_downloaded_file(self, anio):
+        try:
+            time.sleep(5)
+            
+            files_before = set(os.listdir(self.current_download_path))
+            time.sleep(3)
+            files_after = set(os.listdir(self.current_download_path))
+            
+            new_files = files_after - files_before
+            if not new_files:
+                all_files = [f for f in os.listdir(self.current_download_path) 
+                           if f.endswith(('.xls', '.xlsx')) and not f.startswith(str(anio))]
+                if all_files:
+                    all_files.sort(key=lambda x: os.path.getmtime(os.path.join(self.current_download_path, x)), reverse=True)
+                    new_files = {all_files[0]}
+            
+            for filename in new_files:
+                if filename.endswith(('.xls', '.xlsx')) and not filename.startswith('.'):
+                    old_path = os.path.join(self.current_download_path, filename)
+                    
+                    file_extension = os.path.splitext(filename)[1]
+                    new_filename = f"{anio}-{filename}"
+                    new_path = os.path.join(self.current_download_path, new_filename)
+                    
+                    counter = 1
+                    while os.path.exists(new_path):
+                        name_without_ext = os.path.splitext(filename)[0]
+                        new_filename = f"{anio}-{name_without_ext}_{counter}{file_extension}"
+                        new_path = os.path.join(self.current_download_path, new_filename)
+                        counter += 1
+                    
+                    os.rename(old_path, new_path)
+                    self.logger.info(f"Archivo renombrado: {filename} -> {new_filename}")
+                    break
+        except Exception as e:
+            self.logger.error(f"Error al renombrar archivo: {e}")
+    
     def select_empresa(self, empresa_nombre):
-        """Seleccionar empresa del combobox"""
         try:
             self.logger.info(f"Seleccionando empresa: {empresa_nombre}")
             
-            # Localizar el input de empresa
-            empresa_input = self.wait_for_element_clickable(By.ID, "MainContent_TextBox1")
-            
-            # Limpiar y escribir el nombre de la empresa
-            empresa_input.clear()
-            time.sleep(1)
-            empresa_input.send_keys(empresa_nombre)
-            
-            # Esperar a que se carguen las opciones (si hay autocomplete)
-            time.sleep(3)
+            max_attempts = 3
+            for attempt in range(max_attempts):
+                try:
+                    empresa_input = self.wait_for_element_clickable(By.ID, "MainContent_TextBox1")
+                    
+                    self.driver.execute_script("arguments[0].focus();", empresa_input)
+                    time.sleep(1)
+                    
+                    empresa_input.clear()
+                    time.sleep(1)
+                    
+                    for char in empresa_nombre:
+                        empresa_input.send_keys(char)
+                        time.sleep(0.05)
+                    
+                    time.sleep(2)
+                    
+                    current_value = empresa_input.get_attribute('value')
+                    if current_value.strip() == empresa_nombre.strip():
+                        self.logger.info("Empresa ingresada correctamente")
+                        break
+                    else:
+                        self.logger.warning(f"Valor actual: '{current_value}', esperado: '{empresa_nombre}'")
+                        if attempt < max_attempts - 1:
+                            continue
+                    
+                    break
+                    
+                except StaleElementReferenceException:
+                    if attempt < max_attempts - 1:
+                        self.logger.warning(f"Elemento empresa stale, reintentando... intento {attempt + 1}")
+                        time.sleep(1)
+                    else:
+                        raise
             
             self.logger.info("Empresa seleccionada exitosamente")
             return True
@@ -115,16 +203,26 @@ class SMVFinancialScraper:
             return False
     
     def select_periodo_anual(self):
-        """Seleccionar período anual"""
         try:
             self.logger.info("Seleccionando período anual")
             
-            # Localizar el radio button anual
-            radio_anual = self.wait_for_element_clickable(By.ID, "MainContent_cboPeriodo_1")
-            self.safe_click(radio_anual)
-            
-            # Esperar a que se procese la selección
-            time.sleep(2)
+            max_attempts = 3
+            for attempt in range(max_attempts):
+                try:
+                    radio_anual = self.wait_for_element_clickable(By.ID, "MainContent_cboPeriodo_1")
+                    
+                    if not radio_anual.is_selected():
+                        self.driver.execute_script("arguments[0].click();", radio_anual)
+                        time.sleep(2)
+                    
+                    break
+                    
+                except StaleElementReferenceException:
+                    if attempt < max_attempts - 1:
+                        self.logger.warning(f"Elemento radio anual stale, reintentando... intento {attempt + 1}")
+                        time.sleep(1)
+                    else:
+                        raise
             
             self.logger.info("Período anual seleccionado exitosamente")
             return True
@@ -134,19 +232,26 @@ class SMVFinancialScraper:
             return False
     
     def select_anio(self, anio):
-        """Seleccionar año específico"""
         try:
             self.logger.info(f"Seleccionando año: {anio}")
             
-            # Localizar el combobox de año
-            select_element = self.wait_for_element(By.ID, "MainContent_cboAnio")
-            select_anio = Select(select_element)
-            
-            # Seleccionar el año
-            select_anio.select_by_value(str(anio))
-            
-            # Esperar a que se procese la selección
-            time.sleep(2)
+            max_attempts = 3
+            for attempt in range(max_attempts):
+                try:
+                    select_element = self.wait_for_element(By.ID, "MainContent_cboAnio")
+                    select_anio = Select(select_element)
+                    select_anio.select_by_value(str(anio))
+                    time.sleep(2)
+                    
+                    break
+                    
+                except StaleElementReferenceException:
+                    if attempt < max_attempts - 1:
+                        self.logger.warning(f"Elemento select año stale, reintentando... intento {attempt + 1}")
+                        time.sleep(1)
+                        select_element = self.find_element_with_retry(By.ID, "MainContent_cboAnio")
+                    else:
+                        raise
             
             self.logger.info(f"Año {anio} seleccionado exitosamente")
             return True
@@ -156,19 +261,34 @@ class SMVFinancialScraper:
             return False
     
     def click_buscar(self):
-        """Hacer click en botón Buscar"""
         try:
             self.logger.info("Haciendo click en Buscar")
             
-            # Localizar el botón Buscar
-            btn_buscar = self.wait_for_element_clickable(By.ID, "MainContent_cbBuscar")
-            self.safe_click(btn_buscar)
+            empresa_input = self.driver.find_element(By.ID, "MainContent_TextBox1")
+            current_value = empresa_input.get_attribute('value')
+            self.logger.info(f"Valor de empresa antes de buscar: '{current_value}'")
             
-            # Esperar a que se carguen los resultados
-            time.sleep(10)
+            if not current_value.strip():
+                self.logger.error("El campo empresa está vacío antes de buscar")
+                return False
             
-            # Verificar que la búsqueda se completó
-            self.wait_for_element(By.XPATH, "//table//tr", timeout=15)
+            max_attempts = 3
+            for attempt in range(max_attempts):
+                try:
+                    btn_buscar = self.wait_for_element_clickable(By.ID, "MainContent_cbBuscar")
+                    self.driver.execute_script("arguments[0].click();", btn_buscar)
+                    time.sleep(10)
+                    
+                    self.wait_for_element(By.XPATH, "//table//tr", timeout=15)
+                    
+                    break
+                    
+                except StaleElementReferenceException:
+                    if attempt < max_attempts - 1:
+                        self.logger.warning(f"Elemento buscar stale, reintentando... intento {attempt + 1}")
+                        time.sleep(1)
+                    else:
+                        raise
             
             self.logger.info("Búsqueda completada exitosamente")
             return True
@@ -178,36 +298,39 @@ class SMVFinancialScraper:
             return False
     
     def ver_detalle_estados_financieros(self):
-        """Hacer click en Ver detalle de estados financieros"""
         try:
             self.logger.info("Accediendo a detalle de estados financieros")
             
-            # Hacer scroll para asegurar visibilidad
             self.driver.execute_script("window.scrollTo(0, 500);")
             time.sleep(2)
             
-            # Localizar el enlace de detalle (usando XPath más específico)
-            enlace_detalle = self.wait_for_element_clickable(
-                By.XPATH, "//a[contains(@title, 'Ver detalle de Estados Financieros')]"
-            )
-            
-            # Guardar la ventana actual
             main_window = self.driver.current_window_handle
             
-            # Hacer click en el enlace
-            self.safe_click(enlace_detalle)
+            max_attempts = 3
+            for attempt in range(max_attempts):
+                try:
+                    enlace_detalle = self.wait_for_element_clickable(
+                        By.XPATH, "//a[contains(@title, 'Ver detalle de Estados Financieros')]"
+                    )
+                    
+                    self.driver.execute_script("arguments[0].click();", enlace_detalle)
+                    time.sleep(5)
+                    
+                    break
+                    
+                except StaleElementReferenceException:
+                    if attempt < max_attempts - 1:
+                        self.logger.warning(f"Elemento enlace detalle stale, reintentando... intento {attempt + 1}")
+                        time.sleep(1)
+                    else:
+                        raise
             
-            # Esperar a que se abra la nueva ventana
-            time.sleep(5)
-            
-            # Cambiar a la nueva ventana
             if len(self.driver.window_handles) > 1:
                 for window in self.driver.window_handles:
                     if window != main_window:
                         self.driver.switch_to.window(window)
                         break
                 
-                # Esperar a que cargue la nueva página
                 self.wait_for_element(By.ID, "cbExcel", timeout=15)
                 self.logger.info("Ventana de detalle cargada exitosamente")
                 return True, main_window
@@ -219,17 +342,27 @@ class SMVFinancialScraper:
             self.logger.error(f"Error al acceder a detalle: {e}")
             return False, None
     
-    def descargar_excel(self):
-        """Descargar archivo Excel"""
+    def descargar_excel(self, anio):
         try:
             self.logger.info("Iniciando descarga de Excel")
             
-            # Localizar el botón de Excel
-            btn_excel = self.wait_for_element_clickable(By.ID, "cbExcel")
-            self.safe_click(btn_excel)
+            max_attempts = 3
+            for attempt in range(max_attempts):
+                try:
+                    btn_excel = self.wait_for_element_clickable(By.ID, "cbExcel")
+                    self.driver.execute_script("arguments[0].click();", btn_excel)
+                    time.sleep(10)
+                    
+                    break
+                    
+                except StaleElementReferenceException:
+                    if attempt < max_attempts - 1:
+                        self.logger.warning(f"Elemento excel stale, reintentando... intento {attempt + 1}")
+                        time.sleep(1)
+                    else:
+                        raise
             
-            # Esperar a que se complete la descarga
-            time.sleep(10)
+            self.rename_downloaded_file(anio)
             
             self.logger.info("Descarga de Excel iniciada exitosamente")
             return True
@@ -238,88 +371,86 @@ class SMVFinancialScraper:
             self.logger.error(f"Error al descargar Excel: {e}")
             return False
     
+    def reset_to_main_form(self):
+        try:
+            self.driver.get("https://www.smv.gob.pe/SIMV/Frm_InformacionFinanciera?data=A70181B60967D74090DCD93C4920AA1D769614EC12")
+            self.wait_for_element(By.ID, "MainContent_TextBox1", timeout=20)
+            time.sleep(5)
+            return True
+        except Exception as e:
+            self.logger.error(f"Error al resetear formulario: {e}")
+            return False
+    
     def procesar_anio(self, empresa_nombre, anio):
-        """Procesar un año específico"""
         self.logger.info(f"Iniciando procesamiento para {empresa_nombre} - Año {anio}")
         
         try:
-            # Paso 1: Seleccionar empresa
             if not self.select_empresa(empresa_nombre):
                 return False, "Error al seleccionar empresa"
             
-            # Paso 2: Seleccionar período anual
             if not self.select_periodo_anual():
                 return False, "Error al seleccionar período anual"
             
-            # Paso 3: Seleccionar año
             if not self.select_anio(anio):
                 return False, f"Error al seleccionar año {anio}"
             
-            # Paso 4: Click en Buscar
             if not self.click_buscar():
                 return False, "Error al realizar búsqueda"
             
-            # Paso 5: Ver detalle de estados financieros
             success, main_window = self.ver_detalle_estados_financieros()
             if not success:
                 return False, "Error al acceder a detalle"
             
-            # Paso 6: Descargar Excel
-            if not self.descargar_excel():
-                # Cerrar ventana de detalle antes de retornar
+            if not self.descargar_excel(anio):
+                try:
+                    self.driver.close()
+                    if main_window:
+                        self.driver.switch_to.window(main_window)
+                except:
+                    pass
+                return False, "Error al descargar Excel"
+            
+            try:
                 self.driver.close()
                 if main_window:
                     self.driver.switch_to.window(main_window)
-                return False, "Error al descargar Excel"
+            except:
+                pass
             
-            # Paso 7: Cerrar ventana de detalle y volver a la principal
-            self.driver.close()
-            if main_window:
-                self.driver.switch_to.window(main_window)
-            
-            # Esperar antes del siguiente año
-            time.sleep(3)
+            if not self.reset_to_main_form():
+                return False, "Error al resetear formulario"
             
             self.logger.info(f"Procesamiento completado para año {anio}")
             return True, "Éxito"
             
         except Exception as e:
             self.logger.error(f"Error en procesamiento para año {anio}: {e}")
-            # Intentar recuperar el control
             try:
                 if len(self.driver.window_handles) > 1:
                     self.driver.close()
                     self.driver.switch_to.window(self.driver.window_handles[0])
+                self.reset_to_main_form()
             except:
                 pass
             return False, str(e)
     
     def scrape_financial_data(self, empresa_nombre, anios=None):
-        """
-        Método principal para scrapear datos financieros
-        
-        Args:
-            empresa_nombre (str): Nombre de la empresa
-            anios (list): Lista de años a descargar (ej: [2024, 2022, 2020])
-        """
         if anios is None:
             anios = [2024, 2022, 2020]
         
         resultados = {}
         
         try:
-            # Configurar driver
             self.setup_driver()
             
-            # Navegar a la página de la SMV
+            empresa_path = self.setup_empresa_download_folder(empresa_nombre)
+            
             self.logger.info("Navegando a la página de la SMV")
             self.driver.get("https://www.smv.gob.pe/SIMV/Frm_InformacionFinanciera?data=A70181B60967D74090DCD93C4920AA1D769614EC12")
             
-            # Esperar a que cargue la página
             self.wait_for_element(By.ID, "MainContent_TextBox1", timeout=20)
             time.sleep(5)
             
-            # Procesar cada año
             for anio in anios:
                 success, mensaje = self.procesar_anio(empresa_nombre, anio)
                 resultados[anio] = {
@@ -336,7 +467,7 @@ class SMVFinancialScraper:
                 'status': 'completado',
                 'empresa': empresa_nombre,
                 'resultados': resultados,
-                'download_path': self.download_path
+                'download_path': empresa_path
             }
             
         except Exception as e:
@@ -354,12 +485,16 @@ class SMVFinancialScraper:
 
 
 def ejecutar_scraping_smv(empresa_nombre, anios=None):
-    """
-    Función simple para usar en views de Django
-    """
     scraper = SMVFinancialScraper(
-        headless=True,
+        headless=False,
         download_path=os.path.join(os.getcwd(), "descargas_smv")
     )
     
     return scraper.scrape_financial_data(empresa_nombre, anios)
+
+if __name__ == "__main__":
+    empresa = "ADMINISTRADORA JOCKEY PLAZA SHOPPING CENTER S.A."
+    anios = [2024, 2022, 2020]
+    
+    resultado = ejecutar_scraping_smv(empresa, anios)
+    print(resultado)

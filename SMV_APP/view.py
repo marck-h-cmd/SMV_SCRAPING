@@ -2,7 +2,7 @@ from django.http import HttpResponse
 from django.template import Template,Context
 from django.template.loader import get_template
 from django.shortcuts import render
-from scraper import ejecutar_scraping_smv
+from .scraper import ejecutar_scraping_smv
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
