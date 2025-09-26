@@ -9,3 +9,5 @@ xlsxwriter
 lxml
 psutil
 pytesseract
+matplotlib
+Pillow
