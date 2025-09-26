@@ -1,109 +1,812 @@
-<html>
+<!DOCTYPE html>
+<html lang="es">
 <head>
-	<title>Ui-ux</title>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Control - Información Financiera</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel='stylesheet' href='https://use.fontawesome.com/releases/v5.5.0/css/all.css'>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f4ff',
+                            100: '#e0e8ff',
+                            500: '#667eea',
+                            600: '#5a6fd8',
+                            700: '#4c5bc6'
+                        }
+                    },
+                    backgroundImage: {
+                        'gradient-primary': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        'gradient-secondary': 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
+                        'gradient-warning': 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                        'gradient-info': 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                        'gradient-success': 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+                        'gradient-stat4': 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Estilos personalizados adicionales */
+        .checkbox-item input[type="checkbox"] {
+            accent-color: #667eea;
+        }
+        
+        .modal {
+            backdrop-filter: blur(5px);
+        }
+        
+        .excel-table th {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-500 to-purple-700 min-h-screen p-5 text-gray-800">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="header bg-white text-center mb-8 p-8 rounded-2xl shadow-xl">
+            <h1 class="text-3xl font-bold mb-2 bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
+                <i class="fas fa-chart-line mr-2"></i> Panel de Control Financiero
+            </h1>
+            <p class="text-gray-600 text-lg">Extracción y análisis de información empresarial</p>
+        </div>
 
-	<link rel='stylesheet' href='https://use.fontawesome.com/releases/v5.5.0/css/all.css'>
-  
-  </head>
-<body>
-	<div class="mobi">
-		<header>
-		</header>
-		<div class="option">
-			<p></p>
-			<p></p>
-			<p></p>
-			<p></p>
-			<p></p>
-		</div>
-		<footer class="select">
-			<a href="#"><i class="fas fa-bell"></i></a>
-			<a href="#"><i class="fas fa-camera"></i></a>
-			<a href="#"><i class="fas fa-heart"></i></a>
-			<a href="#"><i class="fas fa-home"></i></a>
-		</footer>
-	</div>
+        <!-- Dashboard Grid - Ahora en 2 filas -->
+        <div class="flex flex-col gap-6">
+            <!-- Control Panel - Ahora arriba -->
+            <div class="control-panel bg-white rounded-2xl p-8 shadow-xl">
+                <h2 class="section-title text-xl font-semibold mb-5 text-gray-800 flex items-center gap-2">
+                    <i class="fas fa-cogs"></i> Configuración
+                </h2>
+
+                <form id="searchForm" onsubmit="handleSearch(event)">
+                    <!-- Selección de Empresa -->
+                    <div class="mb-5">
+                        <label for="company-select" class="form-label block text-gray-700 font-semibold mb-2 text-sm">
+                            <i class="fas fa-building mr-1"></i> Empresa:
+                        </label>
+                        <select id="company-select" class="w-full p-3 border-2 border-gray-200 rounded-xl text-gray-700 bg-gray-50 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200 transition-all" required>
+                            <option value="">Seleccione una empresa</option>
+                            <option value="energia-pacifico">ENERGIA DEL PACIFICO S.A.</option>
+                            <option value="banco-credito">BANCO DE CREDITO DEL PERU</option>
+                            <option value="southern-peru">SOUTHERN PERU COPPER CORPORATION</option>
+                            <option value="telefonica">TELEFONICA DEL PERU S.A.A.</option>
+                            <option value="buenaventura">COMPAÑIA DE MINAS BUENAVENTURA S.A.A.</option>
+                            <option value="intercorp">INTERCORP FINANCIAL SERVICES INC.</option>
+                            <option value="rimac-seguros">RIMAC SEGUROS Y REASEGUROS</option>
+                            <option value="luz-sur">LUZ DEL SUR S.A.A.</option>
+                            <option value="volcan">VOLCAN COMPAÑIA MINERA S.A.A.</option>
+                            <option value="union-andina">UNION ANDINA DE CEMENTOS S.A.A.</option>
+                        </select>
+                    </div>
+
+                    <!-- Período de Fecha -->
+                    <!-- <div class="mb-5">
+                        <label class="form-label block text-gray-700 font-semibold mb-2 text-sm">
+                            <i class="fas fa-calendar mr-1"></i> Período:
+                        </label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <input type="date" id="start-date" class="p-3 border-2 border-gray-200 rounded-xl text-gray-700 bg-gray-50 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200 transition-all" value="2023-01-01">
+                            <input type="date" id="end-date" class="p-3 border-2 border-gray-200 rounded-xl text-gray-700 bg-gray-50 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200 transition-all" value="2024-12-31">
+                        </div>
+                    </div> -->
+
+                    <!-- Tipos de Documento -->
+                    <!-- <div class="mb-5">
+                        <label class="form-label block text-gray-700 font-semibold mb-2 text-sm">
+                            <i class="fas fa-file-alt mr-1"></i> Tipos de Documento:
+                        </label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="checkbox-item flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                                <input type="checkbox" id="estados-financieros" checked>
+                                <label for="estados-financieros" class="text-gray-600 text-sm cursor-pointer">Estados Financieros</label>
+                            </div>
+                            <div class="checkbox-item flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                                <input type="checkbox" id="notas-explicativas" checked>
+                                <label for="notas-explicativas" class="text-gray-600 text-sm cursor-pointer">Notas Explicativas</label>
+                            </div>
+                            <div class="checkbox-item flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                                <input type="checkbox" id="dictamen-auditoria">
+                                <label for="dictamen-auditoria" class="text-gray-600 text-sm cursor-pointer">Dictamen de Auditoría</label>
+                            </div>
+                            <div class="checkbox-item flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                                <input type="checkbox" id="memoria-anual">
+                                <label for="memoria-anual" class="text-gray-600 text-sm cursor-pointer">Memoria Anual</label>
+                            </div>
+                            <div class="checkbox-item flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                                <input type="checkbox" id="informes-trimestrales">
+                                <label for="informes-trimestrales" class="text-gray-600 text-sm cursor-pointer">Informes Trimestrales</label>
+                            </div>
+                            <div class="checkbox-item flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                                <input type="checkbox" id="hechos-relevantes">
+                                <label for="hechos-relevantes" class="text-gray-600 text-sm cursor-pointer">Hechos de Importancia</label>
+                            </div>
+                        </div>
+                    </div> -->
+
+                    <!-- Formato de Salida -->
+                    <!-- <div class="mb-5">
+                        <label for="output-format" class="form-label block text-gray-700 font-semibold mb-2 text-sm">
+                            <i class="fas fa-download mr-1"></i> Formato de Descarga:
+                        </label>
+                        <select id="output-format" class="w-full p-3 border-2 border-gray-200 rounded-xl text-gray-700 bg-gray-50 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200 transition-all">
+                            <option value="excel">Excel (.xlsx)</option>
+                            <option value="csv">CSV (.csv)</option>
+                            <option value="pdf">PDF</option>
+                            <option value="json">JSON</option>
+                        </select>
+                    </div> -->
+
+                    <!-- Botones de Acción -->
+                    <div class="grid grid-cols-2 gap-3 mb-5">
+                        <button type="submit" class="btn bg-gradient-primary text-white p-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5 hover:shadow-lg">
+                            <i class="fas fa-search"></i> Extraer Datos
+                        </button>
+                        <button type="button" class="btn bg-gradient-secondary text-white p-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5 hover:shadow-lg" onclick="previewData()">
+                            <i class="fas fa-eye"></i> Vista Previa
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3 mb-5">
+                        <button type="button" class="btn bg-gradient-warning text-white p-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5 hover:shadow-lg" onclick="scheduleExtraction()">
+                            <i class="fas fa-clock"></i> Programar
+                        </button>
+                        <button type="button" class="btn bg-gradient-info text-white p-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5 hover:shadow-lg" onclick="showHistory()">
+                            <i class="fas fa-history"></i> Historial
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Barra de Progreso -->
+                <div class="progress-container bg-gray-100 rounded-xl overflow-hidden h-2 my-5 hidden" id="progressContainer">
+                    <div class="progress-bar h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl w-0 transition-all" id="progressBar"></div>
+                </div>
+
+                <!-- Indicador de Estado -->
+                <div id="statusIndicator"></div>
+
+                <!-- Estadísticas -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 my-6">
+                    <div class="stat-card bg-gradient-warning text-white p-5 rounded-xl text-center">
+                        <div class="stat-number text-2xl font-bold mb-1" id="totalFiles">0</div>
+                        <div class="stat-label text-sm opacity-90">Archivos Extraídos</div>
+                    </div>
+                    <div class="stat-card bg-gradient-info text-white p-5 rounded-xl text-center">
+                        <div class="stat-number text-2xl font-bold mb-1" id="totalSize">0 MB</div>
+                        <div class="stat-label text-sm opacity-90">Tamaño Total</div>
+                    </div>
+                    <div class="stat-card bg-gradient-success text-white p-5 rounded-xl text-center">
+                        <div class="stat-number text-2xl font-bold mb-1" id="successRate">0%</div>
+                        <div class="stat-label text-sm opacity-90">Tasa de Éxito</div>
+                    </div>
+                    <div class="stat-card bg-gradient-stat4 text-white p-5 rounded-xl text-center">
+                        <div class="stat-number text-2xl font-bold mb-1" id="processingTime">0s</div>
+                        <div class="stat-label text-sm opacity-90">Tiempo Proceso</div>
+                    </div>
+                </div>
+
+                <!-- Logs -->
+                <div class="mb-5">
+                    <label class="form-label block text-gray-700 font-semibold mb-2 text-sm">
+                        <i class="fas fa-terminal mr-1"></i> Registro de Actividad:
+                    </label>
+                    <div class="logs-container bg-gray-50 rounded-xl p-4 max-h-40 overflow-y-auto" id="logsContainer">
+                        <div class="log-entry text-sm py-1 border-b border-gray-200 text-gray-700">
+                            <span class="log-time text-gray-500 mr-2">12:00:00</span>
+                            Sistema iniciado correctamente
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Panel - Ahora abajo -->
+            <div class="results-panel bg-white rounded-2xl p-8 shadow-xl min-h-[500px]">
+                <h2 class="section-title text-xl font-semibold mb-5 text-gray-800 flex items-center gap-2">
+                    <i class="fas fa-folder-open"></i> Archivos Extraídos
+                </h2>
+
+                <div id="filesList" class="file-list">
+                    <!-- Los archivos se mostrarán aquí dinámicamente -->
+                    <div class="text-center py-16 text-gray-500">
+                        <i class="fas fa-inbox text-5xl mb-5 opacity-50"></i>
+                        <p>No hay archivos extraídos aún</p>
+                        <p class="text-sm mt-2">Seleccione una empresa y configure los parámetros de extracción</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Vista Previa de Excel -->
+    <div id="excelModal" class="modal fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="modal-content bg-white p-8 rounded-2xl shadow-2xl absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-11/12 max-w-6xl max-h-[90vh] overflow-auto">
+            <div class="modal-header flex justify-between items-center mb-5 pb-3 border-b border-gray-200">
+                <h3 class="text-xl font-semibold"><i class="fas fa-file-excel mr-2"></i> Vista Previa - <span id="modalFileName"></span></h3>
+                <button class="close-modal bg-transparent border-none text-gray-500 text-2xl cursor-pointer w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100 hover:text-gray-700 transition-colors" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="excel-preview overflow-auto max-h-96 border border-gray-200 rounded-lg" id="excelPreview">
+                <!-- Contenido del Excel se cargará aquí -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let extractedFiles = [];
+        let currentExtractionId = null;
+        let processingStartTime = null;
+
+        // Función principal de extracción
+        function handleSearch(event) {
+            event.preventDefault();
+            
+            const formData = getFormData();
+            if (!validateFormData(formData)) return;
+
+            startExtraction(formData);
+        }
+
+        // Recopilar datos del formulario
+        function getFormData() {
+            const checkboxes = document.querySelectorAll('.checkbox-item input[type="checkbox"]:checked');
+            const documentTypes = Array.from(checkboxes).map(cb => cb.id);
+
+            return {
+                company: document.getElementById('company-select').value,
+                companyName: document.querySelector('#company-select option:checked').text,
+                startDate: document.getElementById('start-date').value,
+                endDate: document.getElementById('end-date').value,
+                documentTypes: documentTypes,
+                outputFormat: document.getElementById('output-format').value
+            };
+        }
+
+        // Validar datos del formulario
+        function validateFormData(data) {
+            if (!data.company) {
+                showStatus('Por favor seleccione una empresa', 'error');
+                return false;
+            }
+            if (data.documentTypes.length === 0) {
+                showStatus('Por favor seleccione al menos un tipo de documento', 'error');
+                return false;
+            }
+            return true;
+        }
+
+        // Iniciar proceso de extracción
+        function startExtraction(data) {
+            processingStartTime = Date.now();
+            currentExtractionId = generateId();
+            
+            showProgress(true);
+            updateProgress(0);
+            showStatus('Iniciando extracción de datos...', 'info');
+            addLog('Iniciando extracción para: ' + data.companyName);
+
+            // Simular proceso de extracción
+            simulateExtraction(data);
+        }
+
+        // Simular proceso de extracción
+        function simulateExtraction(data) {
+            const totalSteps = 10;
+            let currentStep = 0;
+
+            const interval = setInterval(() => {
+                currentStep++;
+                const progress = (currentStep / totalSteps) * 100;
+                updateProgress(progress);
+
+                // Mensajes de progreso
+                const messages = [
+                    'Conectando al servidor...',
+                    'Autenticando credenciales...',
+                    'Buscando documentos disponibles...',
+                    'Filtrando por fechas...',
+                    'Descargando estados financieros...',
+                    'Descargando notas explicativas...',
+                    'Procesando formatos...',
+                    'Convirtiendo a Excel...',
+                    'Validando datos...',
+                    'Finalizando proceso...'
+                ];
+
+                addLog(messages[currentStep - 1]);
+
+                if (currentStep >= totalSteps) {
+                    clearInterval(interval);
+                    finishExtraction(data);
+                }
+            }, 800);
+        }
+
+        // Finalizar extracción
+        function finishExtraction(data) {
+            const processingTime = Math.round((Date.now() - processingStartTime) / 1000);
+            
+            // Generar archivos ficticios
+            const mockFiles = generateMockFiles(data);
+            extractedFiles = [...extractedFiles, ...mockFiles];
+
+            updateProgress(100);
+            showStatus(`Extracción completada. ${mockFiles.length} archivos extraídos exitosamente.`, 'success');
+            addLog(`Proceso completado en ${processingTime} segundos`);
+
+            // Actualizar estadísticas
+            updateStats();
+            
+            // Mostrar archivos
+            displayFiles();
+
+            // Ocultar progreso después de un momento
+            setTimeout(() => showProgress(false), 2000);
+        }
+
+        // Generar archivos ficticios
+        function generateMockFiles(data) {
+            const files = [];
+            const baseDate = new Date();
+
+            data.documentTypes.forEach((type, index) => {
+                const fileName = `${data.companyName.replace(/[^a-zA-Z0-9]/g, '_')}_${type}_${baseDate.getFullYear()}.${data.outputFormat}`;
+                const size = Math.round(Math.random() * 2000 + 500); // KB
+                
+                files.push({
+                    id: generateId(),
+                    name: fileName,
+                    type: type,
+                    size: size,
+                    date: new Date(baseDate.getTime() - index * 24 * 60 * 60 * 1000),
+                    company: data.companyName,
+                    format: data.outputFormat,
+                    status: 'completed'
+                });
+            });
+
+            return files;
+        }
+
+        // Mostrar archivos en la interfaz
+        function displayFiles() {
+            const container = document.getElementById('filesList');
+            
+            if (extractedFiles.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 60px 20px; color: #6c757d;">
+                        <i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 20px; opacity: 0.5;"></i>
+                        <p>No hay archivos extraídos aún</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const filesHtml = extractedFiles.map(file => `
+                <div class="file-item">
+                    <div class="file-info">
+                        <div class="file-icon">
+                            <i class="fas ${getFileIcon(file.format)}"></i>
+                        </div>
+                        <div class="file-details">
+                            <h4>${file.name}</h4>
+                            <p>${file.company} • ${formatFileSize(file.size)} • ${formatDate(file.date)}</p>
+                        </div>
+                    </div>
+                    <div class="file-actions">
+                        <button class="btn btn-info btn-small" onclick="previewFile('${file.id}')">
+                            <i class="fas fa-eye"></i> Ver
+                        </button>
+                        <button class="btn btn-secondary btn-small" onclick="downloadFile('${file.id}')">
+                            <i class="fas fa-download"></i> Descargar
+                        </button>
+                        <button class="btn btn-warning btn-small" onclick="deleteFile('${file.id}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = filesHtml;
+        }
+
+        // Vista previa de archivo
+        function previewFile(fileId) {
+            const file = extractedFiles.find(f => f.id === fileId);
+            if (!file) return;
+
+            if (file.format === 'excel' || file.format === 'csv') {
+                showExcelPreview(file);
+            } else {
+                showStatus('Vista previa no disponible para este formato', 'info');
+            }
+        }
+
+        // Mostrar vista previa de Excel
+        function showExcelPreview(file) {
+            document.getElementById('modalFileName').textContent = file.name;
+            
+            // Generar datos ficticios para la vista previa
+            const mockData = generateMockExcelData(file.type);
+            const tableHtml = createExcelTable(mockData);
+            
+            document.getElementById('excelPreview').innerHTML = tableHtml;
+            document.getElementById('excelModal').style.display = 'block';
+            
+            addLog(`Vista previa abierta: ${file.name}`);
+        }
+
+        // Generar datos ficticios para Excel
+        function generateMockExcelData(documentType) {
+            const headers = getHeadersForDocumentType(documentType);
+            const data = [];
+            
+            // Agregar encabezados
+            data.push(headers);
+            
+            // Agregar filas de datos ficticios
+            for (let i = 0; i < 15; i++) {
+                const row = headers.map((header, index) => {
+                    if (header.includes('Fecha')) {
+                        const date = new Date();
+                        date.setMonth(date.getMonth() - i);
+                        return date.toLocaleDateString('es-PE');
+                    } else if (header.includes('Monto') || header.includes('Valor') || header.includes('Importe')) {
+                        return (Math.random() * 1000000).toLocaleString('es-PE', {
+                            style: 'currency',
+                            currency: 'PEN'
+                        });
+                    } else if (header.includes('Porcentaje') || header.includes('%')) {
+                        return (Math.random() * 100).toFixed(2) + '%';
+                    } else {
+                        return `Dato ${i + 1}-${index + 1}`;
+                    }
+                });
+                data.push(row);
+            }
+            
+            return data;
+        }
+
+        // Obtener encabezados según tipo de documento
+        function getHeadersForDocumentType(type) {
+            const headerMap = {
+                'estados-financieros': [
+                    'Período', 'Cuenta Contable', 'Descripción', 'Monto Actual', 'Monto Anterior', 'Variación %'
+                ],
+                'notas-explicativas': [
+                    'Nota N°', 'Título', 'Descripción', 'Referencia', 'Página', 'Fecha'
+                ],
+                'dictamen-auditoria': [
+                    'Fecha Dictamen', 'Auditor', 'Tipo Opinión', 'Observaciones', 'Estado', 'Vigencia'
+                ],
+                'memoria-anual': [
+                    'Sección', 'Título', 'Contenido', 'Página', 'Año', 'Estado'
+                ],
+                'informes-trimestrales': [
+                    'Trimestre', 'Año', 'Indicador', 'Valor', 'Variación', 'Fecha Publicación'
+                ],
+                'hechos-relevantes': [
+                    'Fecha Evento', 'Tipo Hecho', 'Descripción', 'Impacto', 'Estado', 'Fecha Reporte'
+                ]
+            };
+            
+            return headerMap[type] || ['Columna 1', 'Columna 2', 'Columna 3', 'Columna 4'];
+        }
+
+        // Crear tabla HTML para Excel
+        function createExcelTable(data) {
+            if (data.length === 0) return '<p>No hay datos para mostrar</p>';
+            
+            let html = '<table class="excel-table">';
+            
+            // Encabezados
+            html += '<thead><tr>';
+            data[0].forEach(header => {
+                html += `<th>${header}</th>`;
+            });
+            html += '</tr></thead>';
+            
+            // Filas de datos
+            html += '<tbody>';
+            for (let i = 1; i < data.length; i++) {
+                html += '<tr>';
+                data[i].forEach(cell => {
+                    html += `<td>${cell}</td>`;
+                });
+                html += '</tr>';
+            }
+            html += '</tbody>';
+            
+            html += '</table>';
+            return html;
+        }
+
+        // Descargar archivo
+        function downloadFile(fileId) {
+            const file = extractedFiles.find(f => f.id === fileId);
+            if (!file) return;
+
+            // Simular descarga
+            showStatus(`Descargando: ${file.name}`, 'info');
+            addLog(`Descarga iniciada: ${file.name}`);
+            
+            // En una implementación real, aquí harías la descarga real
+            setTimeout(() => {
+                showStatus(`Descarga completada: ${file.name}`, 'success');
+                addLog(`Descarga completada: ${file.name}`);
+            }, 2000);
+        }
+
+        // Eliminar archivo
+        function deleteFile(fileId) {
+            if (!confirm('¿Está seguro de que desea eliminar este archivo?')) return;
+            
+            extractedFiles = extractedFiles.filter(f => f.id !== fileId);
+            displayFiles();
+            updateStats();
+            addLog('Archivo eliminado');
+            showStatus('Archivo eliminado correctamente', 'success');
+        }
+
+        // Cerrar modal
+        function closeModal() {
+            document.getElementById('excelModal').style.display = 'none';
+        }
+
+        // Vista previa de datos
+        function previewData() {
+            const formData = getFormData();
+            if (!validateFormData(formData)) return;
+
+            showStatus('Generando vista previa...', 'info');
+            addLog('Vista previa solicitada');
+            
+            // Simular vista previa
+            setTimeout(() => {
+                const previewHtml = `
+                    <div class="status-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Vista Previa:</strong><br>
+                        Empresa: ${formData.companyName}<br>
+                        Período: ${formData.startDate} - ${formData.endDate}<br>
+                        Documentos: ${formData.documentTypes.length} tipos seleccionados<br>
+                        Formato: ${formData.outputFormat.toUpperCase()}
+                    </div>
+                `;
+                
+                const existingPreview = document.getElementById('previewInfo');
+                if (existingPreview) {
+                    existingPreview.remove();
+                }
+                
+                const previewDiv = document.createElement('div');
+                previewDiv.id = 'previewInfo';
+                previewDiv.innerHTML = previewHtml;
+                document.getElementById('statusIndicator').appendChild(previewDiv);
+                
+                showStatus('Vista previa generada', 'success');
+            }, 1000);
+        }
+
+        // Programar extracción
+        function scheduleExtraction() {
+            const formData = getFormData();
+            if (!validateFormData(formData)) return;
+
+            const scheduledTime = prompt('Ingrese la hora para programar la extracción (HH:MM):', '09:00');
+            if (!scheduledTime) return;
+
+            showStatus(`Extracción programada para las ${scheduledTime}`, 'success');
+            addLog(`Extracción programada para ${scheduledTime} - ${formData.companyName}`);
+        }
+
+        // Mostrar historial
+        function showHistory() {
+            const historyHtml = `
+                <div class="status-info">
+                    <i class="fas fa-history"></i>
+                    <strong>Historial Reciente:</strong><br>
+                    <small>
+                        • 10:30 - ENERGIA DEL PACIFICO S.A. (5 archivos)<br>
+                        • 09:15 - BANCO DE CREDITO (8 archivos)<br>
+                        • Ayer 16:45 - TELEFONICA DEL PERU (3 archivos)<br>
+                        • Ayer 14:20 - SOUTHERN PERU (6 archivos)
+                    </small>
+                </div>
+            `;
+            
+            const existingHistory = document.getElementById('historyInfo');
+            if (existingHistory) {
+                existingHistory.remove();
+            }
+            
+            const historyDiv = document.createElement('div');
+            historyDiv.id = 'historyInfo';
+            historyDiv.innerHTML = historyHtml;
+            document.getElementById('statusIndicator').appendChild(historyDiv);
+            
+            addLog('Historial consultado');
+        }
+
+        // Actualizar estadísticas
+        function updateStats() {
+            const totalFiles = extractedFiles.length;
+            const totalSize = extractedFiles.reduce((sum, file) => sum + file.size, 0);
+            const successRate = extractedFiles.filter(f => f.status === 'completed').length / Math.max(totalFiles, 1) * 100;
+            const avgTime = processingStartTime ? Math.round((Date.now() - processingStartTime) / 1000) : 0;
+
+            document.getElementById('totalFiles').textContent = totalFiles;
+            document.getElementById('totalSize').textContent = formatFileSize(totalSize * 1024); // Convertir a bytes
+            document.getElementById('successRate').textContent = Math.round(successRate) + '%';
+            document.getElementById('processingTime').textContent = avgTime + 's';
+        }
+
+        // Mostrar/ocultar barra de progreso
+        function showProgress(show) {
+            document.getElementById('progressContainer').style.display = show ? 'block' : 'none';
+        }
+
+        // Actualizar barra de progreso
+        function updateProgress(percent) {
+            document.getElementById('progressBar').style.width = percent + '%';
+        }
+
+        // Mostrar estado
+        function showStatus(message, type) {
+            const indicator = document.getElementById('statusIndicator');
+            const statusClass = `status-${type}`;
+            const icon = type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle';
+            
+            const statusHtml = `
+                <div class="${statusClass}">
+                    <i class="fas fa-${icon}"></i>
+                    ${message}
+                </div>
+            `;
+            
+            indicator.innerHTML = statusHtml;
+            
+            // Auto-hide después de 5 segundos para mensajes de éxito/info
+            if (type !== 'error') {
+                setTimeout(() => {
+                    if (indicator.innerHTML.includes(message)) {
+                        indicator.innerHTML = '';
+                    }
+                }, 5000);
+            }
+        }
+
+        // Agregar entrada al log
+        function addLog(message) {
+            const container = document.getElementById('logsContainer');
+            const time = new Date().toLocaleTimeString('es-PE');
+            
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.innerHTML = `<span class="log-time">${time}</span>${message}`;
+            
+            container.insertBefore(logEntry, container.firstChild);
+            
+            // Mantener solo los últimos 50 logs
+            const logs = container.querySelectorAll('.log-entry');
+            if (logs.length > 50) {
+                logs[logs.length - 1].remove();
+            }
+            
+            // Scroll al top
+            container.scrollTop = 0;
+        }
+
+        // Utilidades
+        function generateId() {
+            return 'id_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        function getFileIcon(format) {
+            const icons = {
+                'excel': 'file-excel',
+                'csv': 'file-csv',
+                'pdf': 'file-pdf',
+                'json': 'file-code'
+            };
+            return icons[format] || 'file';
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function formatDate(date) {
+            return date.toLocaleDateString('es-PE', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+
+        // Cerrar modal al hacer clic fuera de él
+        window.onclick = function(event) {
+            const modal = document.getElementById('excelModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            addLog('Panel de control inicializado');
+            updateStats();
+            
+            // Configurar fecha por defecto
+            const today = new Date();
+            const lastYear = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
+            document.getElementById('start-date').value = lastYear.toISOString().split('T')[0];
+            document.getElementById('end-date').value = today.toISOString().split('T')[0];
+        });
+
+        // Función para limpiar todos los archivos
+        function clearAllFiles() {
+            if (!confirm('¿Está seguro de que desea eliminar todos los archivos extraídos?')) return;
+            
+            extractedFiles = [];
+            displayFiles();
+            updateStats();
+            addLog('Todos los archivos eliminados');
+            showStatus('Todos los archivos han sido eliminados', 'success');
+        }
+
+        // Función para exportar configuración
+        function exportConfig() {
+            const config = {
+                company: document.getElementById('company-select').value,
+                startDate: document.getElementById('start-date').value,
+                endDate: document.getElementById('end-date').value,
+                documentTypes: Array.from(document.querySelectorAll('.checkbox-item input[type="checkbox"]:checked')).map(cb => cb.id),
+                outputFormat: document.getElementById('output-format').value,
+                exportDate: new Date().toISOString()
+            };
+            
+            const dataStr = JSON.stringify(config, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'configuracion_extraccion.json';
+            link.click();
+            
+            URL.revokeObjectURL(url);
+            addLog('Configuración exportada');
+            showStatus('Configuración exportada correctamente', 'success');
+        }
+
+        // Agregar botones adicionales al final del panel de control
+        document.addEventListener('DOMContentLoaded', function() {
+            const additionalButtons = `
+                <div class="button-group" style="margin-top: 20px;">
+                    <button type="button" class="btn btn-warning" onclick="clearAllFiles()">
+                        <i class="fas fa-trash-alt"></i> Limpiar Todo
+                    </button>
+                    <button type="button" class="btn btn-info" onclick="exportConfig()">
+                        <i class="fas fa-download"></i> Exportar Config
+                    </button>
+                </div>
+            `;
+            
+            const form = document.getElementById('searchForm');
+            form.insertAdjacentHTML('afterend', additionalButtons);
+        });
+    </script>
 </body>
 </html>
-
-<style>
-
-    body{
-			background:linear-gradient(to right bottom, #00b3b3, #3333ff);
-			background-position:center;
-			background-repeat:no-repeat;
-			background-size:100%;
-			background-attachment:fixed;
-			font-size:14pt;
-		}
-		.mobi{
-			width:300px;
-			height:500px;
-			border-radius:10px;
-			margin:auto;
-			margin-top:70px;
-			background:#fff;
-			box-shadow:2px 2px 18px 4px rgba(0,0,0,0.5);
-		}
-		.mobi header{
-			background-image:url(https://images.pexels.com/photos/445109/pexels-photo-445109.jpeg?auto=compress&cs=tinysrgb&h=650&w=940);
-			background-position:-200px -160px;
-			background-repeat:no-repeat;
-			-webkit-filter:blur(2px);
-			border:1px solid transparent;
-			width:300px;
-			height:150px;
-			border-radius:20px 20px 400px 400px;
-			margin:0;
-			padding:0;
-			-webkit-transition:filter .50s;
-		}
-		.mobi header:hover{
-			-webkit-filter:blur(0);
-		}
-		.option{
-			margin-top:50px;
-		}
-		.option p:first-child{
-			margin-top:50px;
-		}
-		.option p:last-child{
-			margin-bottom:50px;
-		}
-		.option p{
-			padding:10px 40px;
-			margin:10px 40px;
-			border:none;
-			border-radius:10px;
-			background:#ccc;
-			-webkit-transition:background, cursor, .50s;
-		}
-		.option p:hover{
-			background:#737373;
-			cursor:pointer;
-		}
-		.select{
-			bottom:0;
-			height:45px;
-			margin-top:120px;
-			background:#ccc;
-			border-radius:0 0 10px 10px;
-		}
-		.select a{
-			text-align:center;
-			display:inline-block;
-			margin:0;
-			margin-left:3px;
-			color:#fff;
-			font-size:18pt;
-			padding:10px 20px;
-		}
-		.fas{
-			-webkit-transition:color .50s;
-		}
-		.fas:hover{
-			color:#0073e6;
-		}
-</style>
