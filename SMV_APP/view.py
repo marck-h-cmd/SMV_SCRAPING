@@ -6,6 +6,8 @@ from .scraper import ejecutar_scraping_smv
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
+from django.http import HttpResponse
+from SMV_APP.finanzas.analisis import FinancialAnalysis
 
 @csrf_exempt
 def descargar_datos_financieros(request):
@@ -27,6 +29,13 @@ def descargar_datos_financieros(request):
             return JsonResponse({'error': str(e)})
     
     return JsonResponse({'error': 'Método no permitido'})
+
+
+
+def generar_analisis(request, empresa):
+    fa = FinancialAnalysis(empresa)
+    resultado = fa.run_analysis()
+    return JsonResponse(resultado)
 
 def acceder(request):
     return render(request,"main/index.html")

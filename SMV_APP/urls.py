@@ -16,9 +16,15 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from django.urls import path
+from . import view  
 from .view import acceder
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', acceder,name="index"),
+    path("analizar/<str:empresa>/", view.generar_analisis, name="generar_analisis"),
 ]
+
+
+
