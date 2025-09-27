@@ -11,6 +11,7 @@ from pathlib import Path
 import mimetypes
 from django.http import FileResponse
 import logging
+from SMV_APP.analisis import marcar_celda_roja
 
 @csrf_exempt
 def descargar_datos_financieros(request):
@@ -269,3 +270,10 @@ def acceder(request):
     return render(request,"main/index.html")
 
 
+
+def analisis(request):
+    archivos_editados = marcar_celda_roja()
+    return JsonResponse({
+        "status": "ok",
+        "message": f"Se marcaron en rojo las celdas de {len(archivos_editados)} archivos."
+    })
