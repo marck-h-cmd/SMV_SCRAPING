@@ -168,7 +168,7 @@ class SMVFinancialScraper:
                     self.driver.execute_script("arguments[0].focus();", empresa_input)
                     time.sleep(1)
                     
-                    empresa_input.clear()
+                    # empresa_input.clear()
                     time.sleep(1)
                     
                     for char in empresa_nombre:
@@ -486,7 +486,7 @@ class SMVFinancialScraper:
 
 def ejecutar_scraping_smv(empresa_nombre, anios=None):
     scraper = SMVFinancialScraper(
-        headless=False,
+        headless=True,
         download_path=os.path.join(os.getcwd(), "descargas_smv")
     )
     
@@ -494,7 +494,7 @@ def ejecutar_scraping_smv(empresa_nombre, anios=None):
 
 if __name__ == "__main__":
     empresa = "ADMINISTRADORA JOCKEY PLAZA SHOPPING CENTER S.A."
-    anios = [2024, 2022, 2020]
+    anios = ['TODOS',2024, 2022, 2020]
     
     resultado = ejecutar_scraping_smv(empresa, anios)
     print(resultado)
