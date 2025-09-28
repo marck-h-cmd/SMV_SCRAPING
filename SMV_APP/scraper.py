@@ -163,44 +163,74 @@ class SMVFinancialScraper:
             max_attempts = 3
             for attempt in range(max_attempts):
                 try:
-                    empresa_input = self.wait_for_element_clickable(By.ID, "MainContent_TextBox1")
-                    
-                    self.driver.execute_script("arguments[0].focus();", empresa_input)
-                    time.sleep(1)
-                    
-                    # empresa_input.clear()
-                    time.sleep(1)
-                    
-                    for char in empresa_nombre:
-                        empresa_input.send_keys(char)
-                        time.sleep(0.05)
+                    self.driver.execute_script("""
+                        var input = document.getElementById('MainContent_TextBox1');
+                        if (input) {
+                            // Desactivar eventos temporalmente
+                            input._oldOnFocus = input.onfocus;
+                            input._oldOnBlur = input.onblur;
+                            input._oldOnChange = input.onchange;
+                            input._oldOnInput = input.oninput;
+                            
+                            input.onfocus = null;
+                            input.onblur = null;
+                            input.onchange = null;
+                            input.oninput = null;
+                            
+                            // Limpiar y establecer valor
+                            input.focus();
+                            input.value = '';
+                            input.value = arguments[0];
+                            
+                            // Restaurar eventos
+                            setTimeout(function() {
+                                input.onfocus = input._oldOnFocus;
+                                input.onblur = input._oldOnBlur;
+                                input.onchange = input._oldOnChange;
+                                input.oninput = input._oldOnInput;
+                                
+                                // Disparar eventos después de restaurar
+                                var inputEvent = new Event('input', { bubbles: true });
+                                var changeEvent = new Event('change', { bubbles: true });
+                                
+                                input.dispatchEvent(inputEvent);
+                                input.dispatchEvent(changeEvent);
+                            }, 100);
+                        }
+                    """, empresa_nombre)
                     
                     time.sleep(2)
                     
-                    current_value = empresa_input.get_attribute('value')
+                    current_value = self.driver.execute_script("""
+                        var input = document.getElementById('MainContent_TextBox1');
+                        return input ? input.value : '';
+                    """)
+                    
+                    self.logger.info(f"Intento {attempt + 1}: Valor actual: '{current_value}'")
+                    
                     if current_value.strip() == empresa_nombre.strip():
                         self.logger.info("Empresa ingresada correctamente")
-                        break
+                        return True
                     else:
-                        self.logger.warning(f"Valor actual: '{current_value}', esperado: '{empresa_nombre}'")
-                        if attempt < max_attempts - 1:
-                            continue
+                        self.logger.warning(f"Valor no coincide, reintentando...")
+                        time.sleep(2)
+                        continue
                     
-                    break
-                    
-                except StaleElementReferenceException:
+                except Exception as e:
+                    self.logger.error(f"Error en intento {attempt + 1}: {e}")
                     if attempt < max_attempts - 1:
-                        self.logger.warning(f"Elemento empresa stale, reintentando... intento {attempt + 1}")
-                        time.sleep(1)
+                        time.sleep(2)
+                        continue
                     else:
                         raise
             
-            self.logger.info("Empresa seleccionada exitosamente")
-            return True
+            self.logger.error("No se pudo ingresar el nombre de la empresa después de todos los intentos")
+            return False
             
         except Exception as e:
             self.logger.error(f"Error al seleccionar empresa: {e}")
             return False
+    
     
     def select_periodo_anual(self):
         try:
