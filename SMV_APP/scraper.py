@@ -12,7 +12,7 @@ from pathlib import Path
 class SMVFinancialScraper:
 
     
-    def __init__(self, headless=True, download_path=None, timeout=30):
+    def __init__(self, headless=True, download_path=None, timeout=15):
         self.headless = headless
         self.timeout = timeout
         self.download_path = download_path or os.path.join(os.getcwd(), "descargas_smv")
@@ -121,10 +121,10 @@ class SMVFinancialScraper:
     
     def rename_downloaded_file(self, anio):
         try:
-            time.sleep(5)
+            time.sleep(3)
             
             files_before = set(os.listdir(self.current_download_path))
-            time.sleep(3)
+            time.sleep(2)
             files_after = set(os.listdir(self.current_download_path))
             
             new_files = files_after - files_before
@@ -199,7 +199,7 @@ class SMVFinancialScraper:
                         }
                     """, empresa_nombre)
                     
-                    time.sleep(2)
+                    time.sleep(1)
                     
                     current_value = self.driver.execute_script("""
                         var input = document.getElementById('MainContent_TextBox1');
@@ -213,13 +213,13 @@ class SMVFinancialScraper:
                         return True
                     else:
                         self.logger.warning(f"Valor no coincide, reintentando...")
-                        time.sleep(2)
+                        time.sleep(1)
                         continue
                     
                 except Exception as e:
                     self.logger.error(f"Error en intento {attempt + 1}: {e}")
                     if attempt < max_attempts - 1:
-                        time.sleep(2)
+                        time.sleep(1)
                         continue
                     else:
                         raise
@@ -243,7 +243,7 @@ class SMVFinancialScraper:
                     
                     if not radio_anual.is_selected():
                         self.driver.execute_script("arguments[0].click();", radio_anual)
-                        time.sleep(2)
+                        time.sleep(1)
                     
                     break
                     
@@ -271,7 +271,7 @@ class SMVFinancialScraper:
                     select_element = self.wait_for_element(By.ID, "MainContent_cboAnio")
                     select_anio = Select(select_element)
                     select_anio.select_by_value(str(anio))
-                    time.sleep(2)
+                    time.sleep(1)
                     
                     break
                     
@@ -307,9 +307,8 @@ class SMVFinancialScraper:
                 try:
                     btn_buscar = self.wait_for_element_clickable(By.ID, "MainContent_cbBuscar")
                     self.driver.execute_script("arguments[0].click();", btn_buscar)
-                    time.sleep(10)
                     
-                    self.wait_for_element(By.XPATH, "//table//tr", timeout=15)
+                    self.wait_for_element(By.XPATH, "//table//tr", timeout=10)
                     
                     break
                     
@@ -332,7 +331,7 @@ class SMVFinancialScraper:
             self.logger.info("Accediendo a detalle de estados financieros")
             
             self.driver.execute_script("window.scrollTo(0, 500);")
-            time.sleep(2)
+            time.sleep(1)
             
             main_window = self.driver.current_window_handle
             
@@ -344,7 +343,7 @@ class SMVFinancialScraper:
                     )
                     
                     self.driver.execute_script("arguments[0].click();", enlace_detalle)
-                    time.sleep(5)
+                    time.sleep(3)
                     
                     break
                     
@@ -361,7 +360,7 @@ class SMVFinancialScraper:
                         self.driver.switch_to.window(window)
                         break
                 
-                self.wait_for_element(By.ID, "cbExcel", timeout=15)
+                self.wait_for_element(By.ID, "cbExcel", timeout=10)
                 self.logger.info("Ventana de detalle cargada exitosamente")
                 return True, main_window
             else:
@@ -381,7 +380,7 @@ class SMVFinancialScraper:
                 try:
                     btn_excel = self.wait_for_element_clickable(By.ID, "cbExcel")
                     self.driver.execute_script("arguments[0].click();", btn_excel)
-                    time.sleep(10)
+                    time.sleep(3)
                     
                     break
                     
@@ -404,8 +403,8 @@ class SMVFinancialScraper:
     def reset_to_main_form(self):
         try:
             self.driver.get("https://www.smv.gob.pe/SIMV/Frm_InformacionFinanciera?data=A70181B60967D74090DCD93C4920AA1D769614EC12")
-            self.wait_for_element(By.ID, "MainContent_TextBox1", timeout=20)
-            time.sleep(5)
+            self.wait_for_element(By.ID, "MainContent_TextBox1", timeout=15)
+            time.sleep(2)
             return True
         except Exception as e:
             self.logger.error(f"Error al resetear formulario: {e}")
@@ -478,8 +477,8 @@ class SMVFinancialScraper:
             self.logger.info("Navegando a la página de la SMV")
             self.driver.get("https://www.smv.gob.pe/SIMV/Frm_InformacionFinanciera?data=A70181B60967D74090DCD93C4920AA1D769614EC12")
             
-            self.wait_for_element(By.ID, "MainContent_TextBox1", timeout=20)
-            time.sleep(5)
+            self.wait_for_element(By.ID, "MainContent_TextBox1", timeout=15)
+            time.sleep(2)
             
             for anio in anios:
                 success, mensaje = self.procesar_anio(empresa_nombre, anio)
@@ -516,7 +515,7 @@ class SMVFinancialScraper:
 
 def ejecutar_scraping_smv(empresa_nombre, anios=None):
     scraper = SMVFinancialScraper(
-        headless=True,
+        headless=False,
         download_path=os.path.join(os.getcwd(), "descargas_smv")
     )
     
@@ -524,7 +523,7 @@ def ejecutar_scraping_smv(empresa_nombre, anios=None):
 
 if __name__ == "__main__":
     empresa = "ADMINISTRADORA JOCKEY PLAZA SHOPPING CENTER S.A."
-    anios = ['TODOS',2024, 2022, 2020]
+    anios = [2024, 2022, 2020]
     
     resultado = ejecutar_scraping_smv(empresa, anios)
     print(resultado)
