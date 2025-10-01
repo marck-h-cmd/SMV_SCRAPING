@@ -12,27 +12,6 @@ import mimetypes
 from django.http import FileResponse
 import logging
 
-@csrf_exempt
-def descargar_datos_financieros(request):
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            empresa_nombre = data.get('empresa_nombre', '')
-            anios = data.get('anios', [2024, 2022, 2020])
-            
-            if not empresa_nombre:
-                return JsonResponse({'error': 'Nombre de empresa requerido'})
-            
- 
-            resultado = ejecutar_scraping_smv(empresa_nombre, anios)
-            
-            return JsonResponse(resultado)
-            
-        except Exception as e:
-            return JsonResponse({'error': str(e)})
-    
-    return JsonResponse({'error': 'Método no permitido'})
-
 
 
 logger = logging.getLogger(__name__)
@@ -43,13 +22,12 @@ def descargar_datos_financieros(request):
         try:
             data = json.loads(request.body)
             empresa_nombre = data.get('empresa_nombre', '')
-            anios = data.get('anios', [2024, 2022, 2020])
-            
+
             if not empresa_nombre:
                 return JsonResponse({'error': 'Nombre de empresa requerido'})
             
     
-            resultado = ejecutar_scraping_smv(empresa_nombre, anios)
+            resultado = ejecutar_scraping_smv(empresa_nombre, 2024,5)
             
             return JsonResponse(resultado)
             

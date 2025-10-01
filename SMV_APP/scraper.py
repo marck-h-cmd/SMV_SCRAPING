@@ -166,7 +166,6 @@ class SMVFinancialScraper:
                     self.driver.execute_script("""
                         var input = document.getElementById('MainContent_TextBox1');
                         if (input) {
-                            // Desactivar eventos temporalmente
                             input._oldOnFocus = input.onfocus;
                             input._oldOnBlur = input.onblur;
                             input._oldOnChange = input.onchange;
@@ -177,19 +176,16 @@ class SMVFinancialScraper:
                             input.onchange = null;
                             input.oninput = null;
                             
-                            // Limpiar y establecer valor
                             input.focus();
                             input.value = '';
                             input.value = arguments[0];
                             
-                            // Restaurar eventos
                             setTimeout(function() {
                                 input.onfocus = input._oldOnFocus;
                                 input.onblur = input._oldOnBlur;
                                 input.onchange = input._oldOnChange;
                                 input.oninput = input._oldOnInput;
                                 
-                                // Disparar eventos después de restaurar
                                 var inputEvent = new Event('input', { bubbles: true });
                                 var changeEvent = new Event('change', { bubbles: true });
                                 
@@ -326,6 +322,39 @@ class SMVFinancialScraper:
             self.logger.error(f"Error al hacer click en Buscar: {e}")
             return False
     
+    def check_resultados_disponibles(self):
+        try:
+            time.sleep(2)
+            
+            no_data_messages = [
+                "//td[contains(text(), 'No se encontraron registros coincidentes con sus criterios de búsqueda.')]",
+            ]
+            
+            for xpath in no_data_messages:
+                try:
+                    no_data = self.driver.find_elements(By.XPATH, xpath)
+                    if no_data:
+                        self.logger.info("No se encontraron resultados para este año")
+                        return False
+                except:
+                    pass
+            
+            try:
+                enlace_detalle = self.driver.find_elements(
+                    By.XPATH, "//a[contains(@title, 'Ver detalle de Estados Financieros')]"
+                )
+                if enlace_detalle:
+                    self.logger.info("Se encontraron resultados disponibles")
+                    return True
+            except:
+                pass
+            
+            return False
+            
+        except Exception as e:
+            self.logger.error(f"Error al verificar resultados: {e}")
+            return False
+    
     def ver_detalle_estados_financieros(self):
         try:
             self.logger.info("Accediendo a detalle de estados financieros")
@@ -343,7 +372,7 @@ class SMVFinancialScraper:
                     )
                     
                     self.driver.execute_script("arguments[0].click();", enlace_detalle)
-                    time.sleep(3)
+                    time.sleep(4)
                     
                     break
                     
@@ -415,20 +444,25 @@ class SMVFinancialScraper:
         
         try:
             if not self.select_empresa(empresa_nombre):
-                return False, "Error al seleccionar empresa"
+                return False, "Error al seleccionar empresa", False
             
             if not self.select_periodo_anual():
-                return False, "Error al seleccionar período anual"
+                return False, "Error al seleccionar período anual", False
             
             if not self.select_anio(anio):
-                return False, f"Error al seleccionar año {anio}"
+                return False, f"Error al seleccionar año {anio}", False
             
             if not self.click_buscar():
-                return False, "Error al realizar búsqueda"
+                return False, "Error al realizar búsqueda", False
+            
+            if not self.check_resultados_disponibles():
+                self.logger.info(f"No hay datos disponibles para el año {anio}")
+                self.reset_to_main_form()
+                return False, f"Sin datos para año {anio}", True
             
             success, main_window = self.ver_detalle_estados_financieros()
             if not success:
-                return False, "Error al acceder a detalle"
+                return False, "Error al acceder a detalle", False
             
             if not self.descargar_excel(anio):
                 try:
@@ -437,7 +471,7 @@ class SMVFinancialScraper:
                         self.driver.switch_to.window(main_window)
                 except:
                     pass
-                return False, "Error al descargar Excel"
+                return False, "Error al descargar Excel", False
             
             try:
                 self.driver.close()
@@ -447,10 +481,10 @@ class SMVFinancialScraper:
                 pass
             
             if not self.reset_to_main_form():
-                return False, "Error al resetear formulario"
+                return False, "Error al resetear formulario", False
             
             self.logger.info(f"Procesamiento completado para año {anio}")
-            return True, "Éxito"
+            return True, "Éxito", False
             
         except Exception as e:
             self.logger.error(f"Error en procesamiento para año {anio}: {e}")
@@ -461,12 +495,41 @@ class SMVFinancialScraper:
                 self.reset_to_main_form()
             except:
                 pass
-            return False, str(e)
+            return False, str(e), False
     
-    def scrape_financial_data(self, empresa_nombre, anios=None):
-        if anios is None:
-            anios = [2024, 2022, 2020]
+    def determinar_anio_inicial(self, empresa_nombre, anio_base=2024):
+        self.logger.info(f"Determinando año inicial desde {anio_base}")
         
+        for anio_test in range(anio_base, anio_base - 10, -1):
+            try:
+                if not self.select_empresa(empresa_nombre):
+                    continue
+                
+                if not self.select_periodo_anual():
+                    continue
+                
+                if not self.select_anio(anio_test):
+                    continue
+                
+                if not self.click_buscar():
+                    continue
+                
+                if self.check_resultados_disponibles():
+                    self.logger.info(f"Año inicial determinado: {anio_test}")
+                    self.reset_to_main_form()
+                    return anio_test
+                
+                self.reset_to_main_form()
+                
+            except Exception as e:
+                self.logger.error(f"Error al verificar año {anio_test}: {e}")
+                self.reset_to_main_form()
+                continue
+        
+        self.logger.warning(f"No se encontraron datos en rango {anio_base} a {anio_base - 9}")
+        return None
+    
+    def scrape_financial_data(self, empresa_nombre, anio_base=2024, rango_anios=5):
         resultados = {}
         
         try:
@@ -480,21 +543,37 @@ class SMVFinancialScraper:
             self.wait_for_element(By.ID, "MainContent_TextBox1", timeout=15)
             time.sleep(2)
             
-            for anio in anios:
-                success, mensaje = self.procesar_anio(empresa_nombre, anio)
+            anio_inicial = self.determinar_anio_inicial(empresa_nombre, anio_base)
+            
+            if anio_inicial is None:
+                return {
+                    'status': 'error',
+                    'message': f'No se encontraron datos disponibles desde {anio_base}',
+                    'resultados': resultados,
+                    'download_path': empresa_path
+                }
+            
+            anios_a_procesar = list(range(anio_inicial, anio_inicial - rango_anios, -1))
+            self.logger.info(f"Procesando años: {anios_a_procesar}")
+            
+            for anio in anios_a_procesar:
+                success, mensaje, sin_datos = self.procesar_anio(empresa_nombre, anio)
                 resultados[anio] = {
                     'success': success,
                     'message': mensaje
                 }
                 
-                if not success:
+                if not success and not sin_datos:
                     self.logger.warning(f"Falló el procesamiento para año {anio}")
+                elif not success and sin_datos:
+                    self.logger.info(f"Sin datos para año {anio}, continuando...")
                 else:
                     self.logger.info(f"Éxito en procesamiento para año {anio}")
             
             return {
                 'status': 'completado',
                 'empresa': empresa_nombre,
+                'anio_inicial': anio_inicial,
                 'resultados': resultados,
                 'download_path': empresa_path
             }
@@ -513,17 +592,16 @@ class SMVFinancialScraper:
                 self.logger.info("WebDriver cerrado")
 
 
-def ejecutar_scraping_smv(empresa_nombre, anios=None):
+def ejecutar_scraping_smv(empresa_nombre, anio_base=2024, rango_anios=5):
     scraper = SMVFinancialScraper(
         headless=False,
         download_path=os.path.join(os.getcwd(), "descargas_smv")
     )
     
-    return scraper.scrape_financial_data(empresa_nombre, anios)
+    return scraper.scrape_financial_data(empresa_nombre, anio_base, rango_anios)
 
 if __name__ == "__main__":
-    empresa = "ADMINISTRADORA JOCKEY PLAZA SHOPPING CENTER S.A."
-    anios = [2024, 2022, 2020]
+    empresa = "EMPRESA AGRICOLA GANADERA SALAMANCA S.A.A."
     
-    resultado = ejecutar_scraping_smv(empresa, anios)
+    resultado = ejecutar_scraping_smv(empresa, anio_base=2024, rango_anios=5)
     print(resultado)
