@@ -80,15 +80,15 @@
                             required>
                             <option value="">Seleccione una empresa</option>
                             <option value="ENERGIA DEL PACIFICO S.A.">ENERGIA DEL PACIFICO S.A.</option>
-                            <option value="banco-credito">BANCO DE CREDITO DEL PERU</option>
-                            <option value="southern-peru">SOUTHERN PERU COPPER CORPORATION</option>
-                            <option value="telefonica">TELEFONICA DEL PERU S.A.A.</option>
-                            <option value="buenaventura">COMPAÑIA DE MINAS BUENAVENTURA S.A.A.</option>
-                            <option value="intercorp">INTERCORP FINANCIAL SERVICES INC.</option>
-                            <option value="rimac-seguros">RIMAC SEGUROS Y REASEGUROS</option>
-                            <option value="luz-sur">LUZ DEL SUR S.A.A.</option>
-                            <option value="volcan">VOLCAN COMPAÑIA MINERA S.A.A.</option>
-                            <option value="union-andina">UNION ANDINA DE CEMENTOS S.A.A.</option>
+                            <option value="BANCO DE CREDITO DEL PERU">BANCO DE CREDITO DEL PERU</option>
+                            <option value="SOUTHERN PERU COPPER CORPORATION">SOUTHERN PERU COPPER CORPORATION</option>
+                            <option value="TELEFONICA DEL PERU S.A.A.">TELEFONICA DEL PERU S.A.A.</option>
+                            <option value="COMPAÑIA DE MINAS BUENAVENTURA S.A.A.">COMPAÑIA DE MINAS BUENAVENTURA S.A.A.</option>
+                            <option value="INTERCORP FINANCIAL SERVICES INC.">INTERCORP FINANCIAL SERVICES INC.</option>
+                            <option value="RIMAC SEGUROS Y REASEGUROS">RIMAC SEGUROS Y REASEGUROS</option>
+                            <option value="LUZ DEL SUR S.A.A.">LUZ DEL SUR S.A.A.</option>
+                            <option value="VOLCAN COMPAÑIA MINERA S.A.A.">VOLCAN COMPAÑIA MINERA S.A.A.</option>
+                            <option value="UNION ANDINA DE CEMENTOS S.A.A.">UNION ANDINA DE CEMENTOS S.A.A.</option>
                         </select>
                     </div>
 
@@ -100,7 +100,7 @@
                             class="btn bg-gradient-primary text-white p-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5 hover:shadow-lg">
                             <i class="fas fa-search"></i> Extraer Datos
                         </button>
-                        <button type="button"
+                        <button type="button" id="btnAnalisis" 
                             class="btn bg-gradient-secondary text-white p-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5 hover:shadow-lg"
                             onclick="analisis()">
                             <i class="fas fa-file-excel"></i> Analisis
@@ -214,9 +214,18 @@
             return {
                 company: companySelect.value,
                 companyName: selectedOption.text,
-                anios: [2024, 2022, 2020] // Años por defecto
             };
         }
+
+        function updateAnalisisBtnState() {
+            const companySelect = document.getElementById('company-select');
+            const btnAnalisis = document.getElementById('btnAnalisis');
+            console.log('Archivos extraídos:',extractedFiles.filter(f => f.company === companySelect.value).length);
+            btnAnalisis.disabled = extractedFiles.filter(f => f.company === companySelect.value).length !== 5;
+            btnAnalisis.classList.toggle('opacity-50', extractedFiles.filter(f => f.company === companySelect.value).length !== 5);
+        }
+
+  
 
         // Validar datos del formulario
         function validateFormData(data) {
@@ -818,10 +827,11 @@
             const companySelect = document.getElementById('company-select');
             companySelect.addEventListener('change', function () {
                 const selectedOption = this.options[this.selectedIndex];
-
+                  updateAnalisisBtnState();
                 if (selectedOption.value) {
                     addLog(`Empresa cambiada a: ${selectedOption.text}`);
                     loadExistingFiles(selectedOption.text);
+                   
                 } else {
                     displayFiles();
                     updateStats();
@@ -920,6 +930,7 @@
                 closeModal();
             }
         });
+ 
     </script>
 </body>
 
