@@ -81,7 +81,7 @@
                             <option value="">Seleccione una empresa</option>
                             <option value="ENERGIA DEL PACIFICO S.A.">ENERGIA DEL PACIFICO S.A.</option>
                             <option value="BANCO DE CREDITO DEL PERU">BANCO DE CREDITO DEL PERU</option>
-                            <option value="SOUTHERN PERU COPPER CORPORATION">SOUTHERN PERU COPPER CORPORATION</option>
+                            <!-- <option value="SOUTHERN PERU COPPER CORPORATION">SOUTHERN PERU COPPER CORPORATION</option> -->
                             <option value="TELEFONICA DEL PERU S.A.A.">TELEFONICA DEL PERU S.A.A.</option>
                             <option value="COMPAÑIA DE MINAS BUENAVENTURA S.A.A.">COMPAÑIA DE MINAS BUENAVENTURA S.A.A.</option>
                             <option value="INTERCORP FINANCIAL SERVICES INC.">INTERCORP FINANCIAL SERVICES INC.</option>
@@ -293,7 +293,7 @@
                 // Verificar archivos en tiempo real
                 checkForNewFiles();
 
-            }, 3000); // Verificar cada 3 segundos
+            }, 1000); // Verificar cada 1 segundos
         }
 
         // Verificar nuevos archivos en la carpeta
@@ -827,7 +827,7 @@
             const companySelect = document.getElementById('company-select');
             companySelect.addEventListener('change', function () {
                 const selectedOption = this.options[this.selectedIndex];
-                  updateAnalisisBtnState();
+             
                 if (selectedOption.value) {
                     addLog(`Empresa cambiada a: ${selectedOption.text}`);
                     loadExistingFiles(selectedOption.text);
@@ -836,6 +836,7 @@
                     displayFiles();
                     updateStats();
                 }
+                updateAnalisisBtnState();
             });
         }
 
