@@ -24,5 +24,6 @@ urlpatterns = [
     path('descargar-datos-financieros/', descargar_datos_financieros, name='descargar_datos_financieros'),
     path('delete-file/', delete_file, name='delete_file'),
     path('verificar-archivos/', verificar_archivos, name='verificar_archivos'),
-      path('preview-excel/', preview_excel, name='preview_excel'),
+    path('preview-excel/', preview_excel, name='preview_excel'),
+    path("analisis-financieros/", analisis, name="analisis"),
 ]

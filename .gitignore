@@ -17,4 +17,6 @@ env/
 .vscode/
 .idea/
 
+# Descargas SMV
+descargas_smv/*
 
