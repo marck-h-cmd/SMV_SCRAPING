@@ -11,30 +11,8 @@ from pathlib import Path
 import mimetypes
 from django.http import FileResponse
 import logging
-from SMV_APP.analisis import marcar_celda_roja
-
-@csrf_exempt
-def descargar_datos_financieros(request):
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            empresa_nombre = data.get('empresa_nombre', '')
-            anios = data.get('anios', [2024, 2022, 2020])
-            
-            if not empresa_nombre:
-                return JsonResponse({'error': 'Nombre de empresa requerido'})
-            
- 
-            resultado = ejecutar_scraping_smv(empresa_nombre, anios)
-            
-            return JsonResponse(resultado)
-            
-        except Exception as e:
-            return JsonResponse({'error': str(e)})
-    
-    return JsonResponse({'error': 'Método no permitido'})
-
-
+from django.views.decorators.http import require_http_methods
+from SMV_APP.analisis import formato_xls_xlsx, union_archivos, analisis_VH, analisis_Ratios, graficosRatios, renombrar
 
 logger = logging.getLogger(__name__)
 
@@ -44,13 +22,12 @@ def descargar_datos_financieros(request):
         try:
             data = json.loads(request.body)
             empresa_nombre = data.get('empresa_nombre', '')
-            anios = data.get('anios', [2024, 2022, 2020])
-            
+
             if not empresa_nombre:
                 return JsonResponse({'error': 'Nombre de empresa requerido'})
             
     
-            resultado = ejecutar_scraping_smv(empresa_nombre, anios)
+            resultado = ejecutar_scraping_smv(empresa_nombre, 2024,5)
             
             return JsonResponse(resultado)
             
@@ -270,10 +247,63 @@ def acceder(request):
     return render(request,"main/index.html")
 
 
-
+@csrf_exempt
+@require_http_methods(["POST"])
 def analisis(request):
-    archivos_editados = marcar_celda_roja()
-    return JsonResponse({
-        "status": "ok",
-        "message": f"Se marcaron en rojo las celdas de {len(archivos_editados)} archivos."
-    })
+    try:
+        # 1. Obtener la ruta de la empresa del JSON del POST
+        data = json.loads(request.body)
+        
+        # Asumiendo que el frontend envía la ruta de la carpeta (ej. 'descargas_smv/ENERGIA_DEL_PACIFICO_SA')
+        carpeta_empresa = data.get('carpeta_empresa', '') 
+
+        empresa_clean = "".join(c for c in carpeta_empresa if c.isalnum() or c in (' ', '-', '_')).rstrip()
+        empresa_clean = empresa_clean.replace(' ', '_')
+        
+        if not empresa_clean:
+             return JsonResponse({'error': 'La ruta de la carpeta de la empresa es requerida.'}, status=400)
+
+        # 2. Definir la base para las rutas (similar a tus otras funciones)
+        # Esto asume que el path es relativo a la raíz del proyecto
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        
+        # 3. Construir las rutas dinámicamente
+        
+        # La ruta base donde están todos los archivos .xls o .xlsx
+        DIR_BASE_FINANCIEROS = os.path.join("descargas_smv", empresa_clean)
+
+        formato_xls_xlsx(DIR_BASE_FINANCIEROS)
+        
+        # Asumimos que los archivos tienen nombres predecibles basados en el año y el directorio:
+        RUTA1 = os.path.join(DIR_BASE_FINANCIEROS, "2024-ReporteDetalleInformacionFinanciero.xlsx")
+        RUTA2 = os.path.join(DIR_BASE_FINANCIEROS, "2023-ReporteDetalleInformacionFinanciero.xlsx")
+        RUTA3 = os.path.join(DIR_BASE_FINANCIEROS, "2022-ReporteDetalleInformacionFinanciero.xlsx")
+        RUTA4 = os.path.join(DIR_BASE_FINANCIEROS, "2021-ReporteDetalleInformacionFinanciero.xlsx")
+        RUTA5 = os.path.join(DIR_BASE_FINANCIEROS, "2020-ReporteDetalleInformacionFinanciero.xlsx")
+        
+        # Verificar que la ruta principal (RUTA1) exista antes de proceder
+        if not os.path.exists(RUTA1):
+             return JsonResponse({'error': f"El archivo base (2024) no fue encontrado en: {RUTA1}"}, status=404)
+        
+        # 4. Ejecutar formato, unión y análisis
+        union_archivos(RUTA2, RUTA1, 5)
+        union_archivos(RUTA3, RUTA1, 6)
+        union_archivos(RUTA4, RUTA1, 7)
+        union_archivos(RUTA5, RUTA1, 8)
+
+        analisis_VH(RUTA1)
+        analisis_Ratios(RUTA1)
+        graficosRatios(RUTA1)
+        renombrar(RUTA1)
+
+        return JsonResponse({
+            "status": "success", 
+            "message": "Análisis y unión completados con éxito."
+        }, status=200)
+
+    except Exception as e:
+        logger.error(f"Error en el proceso de análisis y unión: {str(e)}")
+        return JsonResponse({
+            "status": "error", 
+            "message": f"Error interno en la función de análisis: {str(e)}"
+        }, status=500)

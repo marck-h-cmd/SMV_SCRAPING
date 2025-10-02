@@ -25,5 +25,5 @@ urlpatterns = [
     path('delete-file/', delete_file, name='delete_file'),
     path('verificar-archivos/', verificar_archivos, name='verificar_archivos'),
     path('preview-excel/', preview_excel, name='preview_excel'),
-    path("analisis/", analisis, name="analisis"),
+    path("analisis-financieros/", analisis, name="analisis"),
 ]

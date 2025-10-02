@@ -79,7 +79,7 @@
                             class="w-full p-3 border-2 border-gray-200 rounded-xl text-gray-700 bg-gray-50 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200 transition-all"
                             required>
                             <option value="">Seleccione una empresa</option>
-                            <option value="energia-pacifico">ENERGIA DEL PACIFICO S.A.</option>
+                            <option value="ENERGIA DEL PACIFICO S.A.">ENERGIA DEL PACIFICO S.A.</option>
                             <option value="banco-credito">BANCO DE CREDITO DEL PERU</option>
                             <option value="southern-peru">SOUTHERN PERU COPPER CORPORATION</option>
                             <option value="telefonica">TELEFONICA DEL PERU S.A.A.</option>
@@ -102,8 +102,8 @@
                         </button>
                         <button type="button"
                             class="btn bg-gradient-secondary text-white p-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5 hover:shadow-lg"
-                            onclick="previewData()">
-                            <i class="fas fa-eye"></i> Vista Previa
+                            onclick="analisis()">
+                            <i class="fas fa-file-excel"></i> Analisis
                         </button>
                     </div>
 
@@ -830,17 +830,51 @@
         }
 
         // Vista previa de datos (sin extracción)
-        function previewData() {
+        async function analisis() {
             const companySelect = document.getElementById('company-select');
             const selectedOption = companySelect.options[companySelect.selectedIndex];
+            const carpetaEmpresa = selectedOption.value;
+
+            console.log(carpetaEmpresa)
 
             if (!selectedOption.value) {
                 showStatus('Seleccione una empresa primero', 'error');
                 return;
             }
 
-            addLog(`Cargando vista previa para: ${selectedOption.text}`);
-            loadExistingFiles(selectedOption.text);
+            addLog(`Analizando Estados de Ratios de la empresa: ${selectedOption.text}`);
+
+            try {
+                const response = await fetch('/analisis-financieros/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        carpeta_empresa: carpetaEmpresa 
+                    })
+                });
+
+                const result = await response.json();
+
+                console.log(result)
+
+                if (response.ok && result.status === 'success') {
+                    showStatus(result.message, 'success');
+                    addLog(`✅ ${result.message}`);
+                } else {
+                    showStatus(`Error en el análisis: ${result.message || 'Error desconocido'}`, 'error');
+                    addLog(`ERROR: ${result.message || 'Error de servidor'}`);
+                    console.log(result)
+                }
+
+            } catch (error) {
+                // Manejar errores de red o parsing de JSON
+                console.error('Error de red durante el análisis:', error);
+                showStatus('Error de conexión con el servidor. Verifique la red.', 'error');
+                addLog(`ERROR DE CONEXIÓN: ${error}`);
+            }
+            
         }
 
         // Crear tabla HTML desde datos de Excel
