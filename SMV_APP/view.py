@@ -11,30 +11,7 @@ from pathlib import Path
 import mimetypes
 from django.http import FileResponse
 import logging
-from SMV_APP.analisis import marcar_celda_roja
-
-@csrf_exempt
-def descargar_datos_financieros(request):
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            empresa_nombre = data.get('empresa_nombre', '')
-            anios = data.get('anios', [2024, 2022, 2020])
-            
-            if not empresa_nombre:
-                return JsonResponse({'error': 'Nombre de empresa requerido'})
-            
- 
-            resultado = ejecutar_scraping_smv(empresa_nombre, anios)
-            
-            return JsonResponse(resultado)
-            
-        except Exception as e:
-            return JsonResponse({'error': str(e)})
-    
-    return JsonResponse({'error': 'Método no permitido'})
-
-
+from SMV_APP.analisis import formato_xls_xlsx, union_archivos, analisis_Ratios, graficosRatios, renombrar
 
 logger = logging.getLogger(__name__)
 
@@ -44,13 +21,12 @@ def descargar_datos_financieros(request):
         try:
             data = json.loads(request.body)
             empresa_nombre = data.get('empresa_nombre', '')
-            anios = data.get('anios', [2024, 2022, 2020])
-            
+
             if not empresa_nombre:
                 return JsonResponse({'error': 'Nombre de empresa requerido'})
             
     
-            resultado = ejecutar_scraping_smv(empresa_nombre, anios)
+            resultado = ejecutar_scraping_smv(empresa_nombre, 2024,5)
             
             return JsonResponse(resultado)
             
@@ -270,10 +246,32 @@ def acceder(request):
     return render(request,"main/index.html")
 
 
-
+@require_http_methods(["POST"])
 def analisis(request):
-    archivos_editados = marcar_celda_roja()
-    return JsonResponse({
-        "status": "ok",
-        "message": f"Se marcaron en rojo las celdas de {len(archivos_editados)} archivos."
-    })
+    # 1. Ejecutar formato de excels 
+    formato_xls_xlsx()
+
+    RUTA5 = r"C:\Users\FELIX\Desktop\CICLO 6\FINANZAS CORPORATIVAS\PROYECTO\SMV_SCRAPING\descargas_smv\ENERGIA_DEL_PACIFICO_SA\2020-ReporteDetalleInformacionFinanciero.xlsx"
+    RUTA4 = r"C:\Users\FELIX\Desktop\CICLO 6\FINANZAS CORPORATIVAS\PROYECTO\SMV_SCRAPING\descargas_smv\ENERGIA_DEL_PACIFICO_SA\2020-ReporteDetalleInformacionFinanciero.xlsx"
+    RUTA3 = r"C:\Users\FELIX\Desktop\CICLO 6\FINANZAS CORPORATIVAS\PROYECTO\SMV_SCRAPING\descargas_smv\ENERGIA_DEL_PACIFICO_SA\2020-ReporteDetalleInformacionFinanciero.xlsx"
+    RUTA2 = r"C:\Users\FELIX\Desktop\CICLO 6\FINANZAS CORPORATIVAS\PROYECTO\SMV_SCRAPING\descargas_smv\ENERGIA_DEL_PACIFICO_SA\2020-ReporteDetalleInformacionFinanciero.xlsx"
+    RUTA1 = r"C:\Users\FELIX\Desktop\CICLO 6\FINANZAS CORPORATIVAS\PROYECTO\SMV_SCRAPING\descargas_smv\ENERGIA_DEL_PACIFICO_SA\2024-ReporteDetalleInformacionFinanciero.xlsx"
+    
+    try:
+        # Ejecución de lógica
+        union_archivos(RUTA2, RUTA1, 6)
+        union_archivos(RUTA3, RUTA1, 7)
+        union_archivos(RUTA4, RUTA1, 8)
+        union_archivos(RUTA5, RUTA1, 9)
+        analisis_VH(RUTA1)
+        analisis_Ratios(RUTA1)
+        graficosRatios(RUTA1)
+        renombrar(RUTA1)
+        return JsonResponse({
+            "status": "success", 
+            "message": "Análisis y unión completados con éxito."
+        }, status=200)
+
+    except Exception as e:
+        print(f"Error en el proceso de análisis y unión: {e}")
+        return JsonResponse({"status": "error", "message": f"Error interno en la función de análisis: {str(e)}"}, status=500)
