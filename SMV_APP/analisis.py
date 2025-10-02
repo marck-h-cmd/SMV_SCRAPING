@@ -450,65 +450,141 @@ def union_archivos(path_xlsx_origen, path_xlsx_destino, columna):
     ws_Origen_hoja4 = wb_origen['Hoja4']
     ws_Destino_hoja4 = wb_destino['Hoja4']
     
-    # 3. DEFINIR RANGO Y POSICIÓN
-    rango_a_copiar = 'D7:E83'
-    rango_a_copiar_2 = 'C8:AA55'
+    # 3. DEFINIR RANGOS COMPLETOS HASTA FILA 83
+    # Para hojas 1, 2 y 4 - rango completo hasta fila 83
+    rango_completo = 'D7:E83'
+    
+    # Para hoja 3 (Patrimonio) - rango específico
+    rango_patrimonio = 'C8:AA55'  # Ajusta este rango según necesites
+    
     fila_destino_inicial = 7
-    fila_destino_inicial_2 = 56
-    fila_destino_inicial_3 = 104
-    columna_destino_inicial = columna
+    fila_destino_patrimonio_2023 = 56  # Ajusta según tu estructura
+    fila_destino_patrimonio_2022 = 104  # Ajusta según tu estructura
 
-    # 4. EJECUTAR COPIA
-    #UNION DE SITUACION FINANCIERA - HOJA 1
-    copiar_celdas(
+    # 4. EJECUTAR COPIA PARA TODOS LOS AÑOS
+    print(f"Copiando datos a columna {columna}...")
+    
+    # HOJA 1 - SITUACIÓN FINANCIERA
+    copiar_celdas_completo(
         ws_Origen_hoja1,
         ws_Destino_hoja1,
-        rango_a_copiar,
+        rango_completo,
         fila_destino_inicial,
-        columna_destino_inicial
+        columna
     )
-
-    #UNION DE RESULTADOS - HOJA 2
-    copiar_celdas(
+    
+    # HOJA 2 - RESULTADOS
+    copiar_celdas_completo(
         ws_Origen_hoja2,
         ws_Destino_hoja2,
-        rango_a_copiar,
+        rango_completo,
         fila_destino_inicial,
-        columna_destino_inicial
+        columna
     )
-
-    #UNION DE PATRIMONIO - HOJA 3
-    """
-    if columna == 5:
-        copiar_celdas(
-            ws_Origen_hoja3,
-            ws_Destino_hoja3,
-            rango_a_copiar_2,
-            fila_destino_inicial_2,
-            columna_destino_inicial - 3
-        )
-    else:
     
-        copiar_celdas(
-            ws_Origen_hoja3,
-            ws_Destino_hoja3,
-            rango_a_copiar_2,
-            fila_destino_inicial_3,
-            columna_destino_inicial - 5
-        )
-    """
-
-    #UNION DE FLUJO DE EFECTIVOS - HOJA 4
-    copiar_celdas(
+    # HOJA 3 - PATRIMONIO (reactivar esta sección)
+    # Determinar posición destino basado en la columna
+    if columna == 5:  # 2024
+        fila_destino_patrimonio = 8
+        columna_destino_patrimonio = 4
+    elif columna == 6:  # 2023
+        fila_destino_patrimonio = 32
+        columna_destino_patrimonio = 4
+    elif columna == 7:  # 2022
+        fila_destino_patrimonio = 56
+        columna_destino_patrimonio = 4
+    elif columna == 8:  # 2021
+        fila_destino_patrimonio = 80
+        columna_destino_patrimonio = 4
+    elif columna == 9:  # 2020
+        fila_destino_patrimonio = 104
+        columna_destino_patrimonio = 4
+    else:  # 2019 u otros
+        fila_destino_patrimonio = 128
+        columna_destino_patrimonio = 4
+    
+    copiar_celdas_completo(
+        ws_Origen_hoja3,
+        ws_Destino_hoja3,
+        rango_patrimonio,
+        fila_destino_patrimonio,
+        columna_destino_patrimonio
+    )
+    
+    # HOJA 4 - FLUJO DE EFECTIVO
+    copiar_celdas_completo(
         ws_Origen_hoja4,
         ws_Destino_hoja4,
-        rango_a_copiar,
+        rango_completo,
         fila_destino_inicial,
-        columna_destino_inicial
+        columna
     )
     
-    # 5. GUARDAR EL ARCHIVO DESTINO (EL ARCHIVO ORIGEN NO SE MODIFICA)
+    # 5. GUARDAR EL ARCHIVO DESTINO
     wb_destino.save(path_xlsx_destino)
+    print(f"Datos copiados exitosamente a columna {columna}")
+
+def copiar_celdas_completo(ws_origen, ws_destino, rango_origen: str, fila_inicio_destino: int, columna_inicio_destino: int):
+    """Versión mejorada que asegura copia completa hasta la fila 83"""
+    
+    # Obtener las coordenadas del rango de origen
+    try:
+        min_col, min_row, max_col, max_row = range_boundaries(rango_origen) 
+    except ValueError:
+        print(f"Error: Rango '{rango_origen}' no es válido.")
+        return
+
+    # Verificar que el rango de origen tenga datos hasta la fila 83
+    fila_maxima_origen = ws_origen.max_row
+    if max_row > fila_maxima_origen:
+        print(f"Advertencia: Rango solicitado hasta fila {max_row} pero origen solo tiene hasta {fila_maxima_origen}")
+        max_row = fila_maxima_origen
+
+    fila_destino = fila_inicio_destino
+    celdas_copiadas = 0
+    
+    # Iterar sobre las filas y columnas del rango de origen
+    for row_num in range(min_row, max_row + 1):
+        col_destino = columna_inicio_destino
+        
+        for col_num in range(min_col, max_col + 1):
+            cell_origen = ws_origen.cell(row=row_num, column=col_num)
+            cell_destino = ws_destino.cell(row=fila_destino, column=col_destino)
+            
+            # Copiar valor
+            cell_destino.value = cell_origen.value 
+            
+            # Copiar formato numérico para celdas numéricas
+            if isinstance(cell_origen.value, (int, float)):
+                cell_destino.number_format = FORMATO_NUMERICO_FINANCIERO
+            
+            celdas_copiadas += 1
+            col_destino += 1
+            
+        fila_destino += 1
+    
+    print(f"Copiadas {celdas_copiadas} celdas desde fila {min_row} a {max_row}")
+
+# Función adicional para diagnóstico
+def verificar_rangos(path_archivo):
+    """Función para diagnosticar los rangos reales de datos"""
+    wb = load_workbook(path_archivo, data_only=True)
+    
+    for sheet_name in ['Hoja1', 'Hoja2', 'Hoja3', 'Hoja4']:
+        ws = wb[sheet_name]
+        print(f"\n{sheet_name}:")
+        print(f"  - Máxima fila con datos: {ws.max_row}")
+        print(f"  - Máxima columna con datos: {ws.max_column}")
+        
+        # Verificar específicamente las filas alrededor de 83
+        for row in [80, 81, 82, 83, 84]:
+            has_data = any(ws.cell(row=row, column=col).value is not None 
+                          for col in range(1, ws.max_column + 1))
+            if has_data:
+                print(f"  - Fila {row}: TIENE DATOS")
+            else:
+                print(f"  - Fila {row}: vacía")
+
 
 def copiar_celdas(ws_origen, ws_destino, rango_origen: str, fila_inicio_destino: int, columna_inicio_destino: int):    
     # Obtener las coordenadas del rango de origen
