@@ -26,4 +26,6 @@ urlpatterns = [
     path('verificar-archivos/', verificar_archivos, name='verificar_archivos'),
     path('preview-excel/', preview_excel, name='preview_excel'),
     path("analisis-financieros/", analisis, name="analisis"),
+    path('download-file/', download_file, name='download_file'),
+    path('descargar-archivo/', descargar_archivo, name='descargar_archivo'),
 ]

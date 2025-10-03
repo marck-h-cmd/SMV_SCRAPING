@@ -716,7 +716,7 @@ class SMVFinancialScraper:
 
 def ejecutar_scraping_smv(empresa_nombre, anio_base=2024, rango_anios=5):
     scraper = SMVFinancialScraper(
-        headless=False,
+        headless=True,
         download_path=os.path.join(os.getcwd(), "descargas_smv")
     )
     

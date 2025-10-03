@@ -50,30 +50,30 @@ class FinancialStatementAnalyzer:
         Eres un analista financiero senior especializado en análisis de estados financieros. 
         Tu objetivo es analizar exhaustivamente los estados financieros y responder específicamente:
 
-        1. TENDENCIAS POSITIVAS O NEGATIVAS:
+        1. ¿Qué tendencias positivas o negativas se observan?
            - Identifica patrones de crecimiento o decrecimiento en ventas, utilidades, activos, pasivos
            - Evalúa tendencias en márgenes de rentabilidad
            - Analiza la evolución de la liquidez y solvencia
 
-        2. RATIOS DE FORTALEZA O DEBILIDAD:
+        2. ¿Qué ratios muestran fortaleza o debilidad?
            - Liquidez: corriente, rápida, prueba ácida
            - Endeudamiento: ratio deuda/patrimonio, deuda/activos
            - Rentabilidad: ROA, ROE, margen neto, margen operativo
            - Eficiencia: rotación de activos, inventarios, cuentas por cobrar
 
-        3. RELACIÓN CON ANÁLISIS VERTICAL Y HORIZONTAL:
+        3. ¿Cómo se relacionan los cambios en los ratios con el análisis vertical y horizontal ya realizado?
            - Explica cómo los cambios en ratios se correlacionan con variaciones porcentuales
            - Relaciona la composición porcentual (vertical) con la evolución temporal (horizontal)
            - Integra ambos análisis para dar una visión completa
 
-        4. SEÑALES DE ALERTA PARA LA GERENCIA:
+        4. ¿Qué señales deberían llamar la atención de la gerencia?
            - Puntos críticos que requieren atención inmediata
            - Riesgos financieros identificados
            - Oportunidades de mejora detectadas
            - Recomendaciones accionables
 
-        Usa terminología financiera precisa y proporciona ejemplos concretos con los datos disponibles.
-        Estructura tu respuesta claramente en las cuatro secciones solicitadas.
+        Usa terminología financiera precisa y parrafos cortos respondiendo.
+        Estructura tu respuesta en parrafos <p> HTML, claramente en las cuatro secciones solicitadas solamente.
         """
     
     def read_excel_file(self, file_path):
@@ -141,7 +141,7 @@ class FinancialStatementAnalyzer:
 def main():
     analyzer = FinancialStatementAnalyzer()
     
-    excel_files = [r"C:\Users\WIND 11\Documents\Marck\Coding\Projects-2025\SMV_SCRAPING\descargas_smv\ENERGIA_DEL_PACIFICO_SA\2024-ReporteDetalleInformacionFinanciero.xlsx"]    
+    excel_files = [r"C:\Users\WIND 11\Documents\Marck\Coding\Projects-2025\SMV_SCRAPING\descargas_smv\CEMENTOS_PACASMAYO_SAA\ANALISIS\ANALISIS-CEMENTOS_PACASMAYO_SAA.xlsx"]    
     for file_path in excel_files:
         if os.path.exists(file_path):
             print(f"\n{'='*80}")
