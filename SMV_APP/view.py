@@ -15,7 +15,7 @@ from django.views.decorators.http import require_http_methods
 from SMV_APP.analisis import union_archivos, analisis_VH, analisis_Ratios, graficosRatios, analisisVertical, analisisHorizontal, analisisRatiosCalculo
 import re
 import shutil
-
+from SMV_APP.gemini import FinancialStatementAnalyzer
 logger = logging.getLogger(__name__)
 
 @csrf_exempt
@@ -323,10 +323,14 @@ def analisis(request):
         analisisHorizontal(RUTA1)
         analisisRatiosCalculo(RUTA1)
         # renombrar(RUTA1)
+        
+        analyzer= FinancialStatementAnalyzer()
+        analisis_gemini = analyzer.analyze_financial_statements(RUTA1)
 
         return JsonResponse({
             "status": "success", 
-            "message": f"Análisis completado."
+            "message": f"Análisis completado.",
+            "conclusion": analisis_gemini,
         }, status=200)
 
     except Exception as e:
@@ -336,3 +340,21 @@ def analisis(request):
             "message": f"Error interno en la función de análisis: {str(e)}"
         }, status=500)
 
+@csrf_exempt
+@require_http_methods(["POST"])
+def descargar_archivo(request):
+    try:
+        data = json.loads(request.body)
+        ruta = data.get('ruta', '')
+        
+        if not ruta or not os.path.exists(ruta):
+            return JsonResponse({'error': 'Archivo no encontrado'}, status=404)
+        
+        with open(ruta, 'rb') as file:
+            response = HttpResponse(file.read(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = f'attachment; filename="{os.path.basename(ruta)}"'
+            return response
+            
+    except Exception as e:
+        logger.error(f"Error descargando archivo: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=500)
