@@ -787,6 +787,7 @@
                             addLog(`Archivo encontrado: ${file.name}`);
                             displayFiles();
                             updateStats();
+                            updateAnalisisBtnState();
                         }
                     });
                 }
@@ -878,6 +879,7 @@
                     }
                 });
             }
+            checkForNewFiles();
 
             updateProgress(100);
             showStatus(`Extracción completada. ${extractedFiles.filter(f => f.company === data.companyName).length} archivos extraídos exitosamente.`, 'success');
@@ -885,7 +887,6 @@
 
             // Actualizar estadísticas
             updateStats();
-
             // Mostrar archivos
             displayFiles();
 

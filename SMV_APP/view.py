@@ -62,7 +62,7 @@ def verificar_archivos(request):
                     file_path = os.path.join(full_path, filename)
                     
           
-                    if filename.lower().endswith(('.xls', '.xlsx')):
+                    if filename.lower().endswith(( '.xlsx')):
                         try:
                             stat = os.stat(file_path)
                             
