@@ -97,7 +97,9 @@ class SMVFinancialScraper:
                     raise
     
     def setup_empresa_download_folder(self, empresa_nombre):
-        empresa_clean = "".join(c for c in empresa_nombre if c.isalnum() or c in (' ', '-', '_')).rstrip()
+        caracteres_permitidos = set("abcdefghijklmnñopqrstuvwxyzABCDEFGHIJKLMNÑOPQRSTUVWXYZáéíóúüÁÉÍÓÚÜ0123456789 -_")
+    
+        empresa_clean = "".join(c for c in empresa_nombre if c in caracteres_permitidos).rstrip()
         empresa_clean = empresa_clean.replace(' ', '_')
         
         empresa_path = os.path.join(self.download_path, empresa_clean)
