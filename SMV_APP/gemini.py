@@ -48,7 +48,7 @@ class FinancialStatementAnalyzer:
     def _get_financial_system_prompt(self):
         return """
         Eres un analista financiero senior especializado en análisis de estados financieros. 
-        Tu objetivo es analizar exhaustivamente los estados financieros y responder específicamente:
+        Tu objetivo es analizar exhaustivamente los estados financieros y responder específicamente segun los datos del documento proporcionado excel.:
 
         1. ¿Qué tendencias positivas o negativas se observan?
            - Identifica patrones de crecimiento o decrecimiento en ventas, utilidades, activos, pasivos
@@ -73,7 +73,7 @@ class FinancialStatementAnalyzer:
            - Recomendaciones accionables
 
         Usa terminología financiera precisa y parrafos cortos respondiendo.
-        Estructura tu respuesta en parrafos <p> HTML, claramente en las cuatro secciones solicitadas solamente.
+        Estructura tu respuesta claramente en las cuatro secciones solicitadas solamente.
         """
     
     def read_excel_file(self, file_path):
@@ -121,7 +121,7 @@ class FinancialStatementAnalyzer:
             analysis_prompt = f"""
             {data_context}
             
-            Realiza un análisis financiero completo respondiendo estas preguntas específicas:
+            Realiza un análisis financiero completo respondiendo estas preguntas específicas de acuerdo a los datos proporcionados en el documento:
             
             1. ¿Qué tendencias positivas o negativas se observan?
             2. ¿Qué ratios muestran fortaleza o debilidad?

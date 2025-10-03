@@ -12,3 +12,4 @@ pytesseract
 matplotlib
 Pillow
 google-generativeai
+reportlab
