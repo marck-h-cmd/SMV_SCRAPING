@@ -11,3 +11,4 @@ psutil
 pytesseract
 matplotlib
 Pillow
+google-generativeai
