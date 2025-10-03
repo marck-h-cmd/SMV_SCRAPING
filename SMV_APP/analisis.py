@@ -4,6 +4,7 @@ from openpyxl import load_workbook
 from openpyxl.styles import PatternFill, Border, Side, Font, Alignment
 from openpyxl.utils import get_column_letter
 from openpyxl.utils.cell import range_boundaries
+from openpyxl.chart import BarChart, LineChart, Reference
 
 
 # Color de relleno de encabezado (Azul Oscuro/Teal)
@@ -1346,3 +1347,338 @@ def convertir_a_numero(valor):
         return float(s) 
     except ValueError: 
         return 0.0
+
+def calcular_posiciones_graficos(ws):
+    """
+    Calcula las mejores posiciones para los gráficos sin superposiciones
+    """
+    # Encontrar una columna segura a la derecha de los datos con más separación
+    ultima_columna_datos = ws.max_column
+    columna_grafico = ultima_columna_datos + 5  # 5 columnas de separación (más espacio)
+    
+    # Convertir a letra de columna
+    from openpyxl.utils import get_column_letter
+    letra_columna = get_column_letter(columna_grafico)
+    
+    # Calcular posiciones verticales con mucha más separación
+    fila_primer_grafico = 2
+    # Calcular separación basada en el tamaño del gráfico (16 unidades de alto + margen)
+    separacion_minima = 25  # Espacio mínimo entre gráficos
+    fila_segundo_grafico = fila_primer_grafico + 16 + separacion_minima  # 2 + 16 + 25 = 43
+    
+    return f"{letra_columna}{fila_primer_grafico}", f"{letra_columna}{fila_segundo_grafico}"
+
+
+def crear_graficos_analisis(path_xlsx):
+    """
+    Crear gráficos de análisis vertical y horizontal en los estados financieros
+    """
+    wb = load_workbook(path_xlsx)
+    graficos_creados = 0
+    
+    try:
+        # Procesar hojas principales después del renombrado
+        hojas_principales = ['Estado de Situación Financiera', 'Estado de Resultados']
+        
+        for nombre_hoja in hojas_principales:
+            if nombre_hoja not in wb.sheetnames:
+                continue
+                
+            ws = wb[nombre_hoja]
+            print(f"📊 Creando gráficos en: {nombre_hoja}")
+            
+            # Calcular posiciones óptimas para evitar superposiciones
+            pos_vertical, pos_horizontal = calcular_posiciones_graficos(ws)
+            print(f"   📍 Posiciones: Vertical={pos_vertical}, Horizontal={pos_horizontal}")
+            
+            # Crear gráfico vertical (columna J - análisis vertical)
+            if crear_grafico_analisis_vertical(ws, pos_vertical, f"Análisis Vertical - {nombre_hoja}"):
+                graficos_creados += 1
+                
+            # Crear gráfico horizontal (columna P - análisis horizontal) 
+            if crear_grafico_analisis_horizontal(ws, pos_horizontal, f"Análisis Horizontal - {nombre_hoja}"):
+                graficos_creados += 1
+        
+        if graficos_creados > 0:
+            wb.save(path_xlsx)
+            print(f"✅ {graficos_creados} gráficos creados exitosamente")
+        else:
+            print("⚠️ No se encontraron hojas con datos de análisis")
+        
+    except Exception as e:
+        print(f"❌ Error creando gráficos: {e}")
+    
+    finally:
+        wb.close()
+
+
+def tiene_datos_analisis(ws):
+    """
+    Verifica si una hoja de cálculo contiene datos de análisis financiero
+    """
+    # Buscar datos numéricos en las columnas de análisis (J-S aproximadamente)
+    for col in range(10, 20):  # Columnas J-S
+        for row in range(2, 30):  # Primeras filas de datos
+            try:
+                cell_value = ws.cell(row=row, column=col).value
+                if isinstance(cell_value, (int, float)) and cell_value != 0:
+                    return True
+            except:
+                continue
+    return False
+
+
+def procesar_nombre_para_grafico(nombre):
+    """Procesa nombres de cuentas para que sean más legibles en gráficos"""
+    if not nombre:
+        return ""
+    
+    # Diccionario de abreviaciones moderadas
+    abreviaciones = {
+        'efectivo y equivalentes': 'Efectivo',
+        'cuentas por cobrar comerciales': 'Cuentas por Cobrar Com.',
+        'cuentas por cobrar': 'Cuentas por Cobrar',
+        'cuentas por pagar comerciales': 'Cuentas por Pagar Com.', 
+        'cuentas por pagar': 'Cuentas por Pagar',
+        'inventarios': 'Inventarios',
+        'mercaderías': 'Mercaderías',
+        'materias primas': 'Materias Primas',
+        'productos terminados': 'Productos Terminados',
+        'productos en proceso': 'Productos en Proceso',
+        'inmuebles, maquinaria y equipo': 'Inmuebles y Equipos',
+        'depreciación acumulada': 'Depreciación Acumulada',
+        'activos corrientes': 'Activos Corrientes',
+        'activos no corrientes': 'Activos No Corrientes',
+        'pasivos corrientes': 'Pasivos Corrientes',
+        'pasivos no corrientes': 'Pasivos No Corrientes',
+        'total activo': 'Total Activos',
+        'total pasivo': 'Total Pasivos',
+        'patrimonio': 'Patrimonio',
+        'capital': 'Capital',
+        'reservas': 'Reservas',
+        'resultados acumulados': 'Resultados Acumulados',
+        'utilidad del ejercicio': 'Utilidad del Ejercicio',
+        'pérdida del ejercicio': 'Pérdida del Ejercicio'
+    }
+    
+    texto = nombre.lower().strip()
+    
+    # Aplicar abreviaciones específicas
+    for clave, abrev in abreviaciones.items():
+        if clave in texto:
+            return abrev
+    
+    # Si no hay abreviación específica, limpiar y formatear
+    # Eliminar palabras muy comunes
+    palabras_eliminar = ['de', 'del', 'la', 'el', 'en', 'por', 'otros', 'otras', 'neto', 'bruto']
+    palabras = texto.split()
+    palabras = [p for p in palabras if p not in palabras_eliminar]
+    
+    resultado = ' '.join(palabras).title()
+    
+    # Limitar longitud
+    if len(resultado) > 25:
+        resultado = resultado[:25] + "..."
+    
+    return resultado if resultado else "Cuenta"
+
+
+def configurar_formato_texto_grafico(chart):
+    """
+    Configura el formato de texto para mejorar la legibilidad de los gráficos
+    """
+    try:
+        # Configuraciones básicas para mejor legibilidad
+        
+        # Configurar posición de etiquetas del eje X
+        if hasattr(chart, 'x_axis'):
+            chart.x_axis.tickLblPos = "low"
+            # Configurar para que las etiquetas no se superpongan
+            chart.x_axis.delete = False
+            # Añadir más espacio entre etiquetas
+            chart.x_axis.majorTickMark = "out"
+            # Configurar formato de número para texto
+            chart.x_axis.number_format = '@'  # Formato de texto para mejorar visualización
+            
+        if hasattr(chart, 'y_axis'):
+            chart.y_axis.delete = False
+            chart.y_axis.majorTickMark = "out"
+            
+        # Mantener leyenda configurada en las funciones individuales de gráficos
+            
+        # Configurar área de gráfico con márgenes adecuados
+        if hasattr(chart, 'plotArea'):
+            chart.plotArea.layout = None
+            # Dar más espacio al área del gráfico dentro del marco
+            
+    except Exception as e:
+        # Si hay error en el formato, continuar sin formato especial
+        pass
+
+
+def crear_grafico_analisis_vertical(ws, posicion, titulo):
+    """Crea gráfico de barras para análisis vertical con leyenda descriptiva"""
+    try:
+        # Buscar datos válidos en columna J (análisis vertical)
+        datos_encontrados = []
+        
+        # Buscar filas con datos numéricos válidos (después de fila 7)
+        for row in range(8, min(ws.max_row + 1, 30)):
+            try:
+                nombre_cuenta = ws.cell(row=row, column=3).value  # Columna C (nombres)
+                valor_vertical = ws.cell(row=row, column=10).value  # Columna J (análisis vertical)
+                
+                if (nombre_cuenta and 
+                    str(nombre_cuenta).strip() and
+                    isinstance(valor_vertical, (int, float)) and 
+                    abs(valor_vertical) > 0.01):  # Filtrar valores significativos
+                    
+                    datos_encontrados.append(row)
+                    
+                    if len(datos_encontrados) >= 6:  # Máximo 6 elementos para claridad
+                        break
+                        
+            except Exception:
+                continue
+        
+        if not datos_encontrados:
+            return False
+        
+        # Crear gráfico de barras con marco bien separado
+        chart = BarChart()
+        chart.title = titulo
+        chart.width = 30  # Tamaño aumentado para mejor visualización del eje X
+        chart.height = 18  # Altura aumentada para dar más espacio a las etiquetas
+        chart.style = 10
+        
+        # Configurar ejes con texto más pequeño
+        chart.x_axis.title = "Cuentas"
+        chart.y_axis.title = "Proporción (%)"
+        
+        # Referencias de datos con títulos descriptivos mejorados
+        data_ref = Reference(ws, 
+                           min_col=10, min_row=min(datos_encontrados),
+                           max_col=10, max_row=max(datos_encontrados))
+        
+        # Crear etiquetas más cortas y legibles para las categorías
+        etiquetas_cortas = []
+        for row in datos_encontrados:
+            nombre_completo = str(ws.cell(row=row, column=3).value or "")
+            # Procesar nombre para mejor legibilidad
+            nombre_corto = procesar_nombre_para_grafico(nombre_completo)
+            etiquetas_cortas.append(nombre_corto)
+        
+        # Agregar etiquetas cortas a una columna temporal
+        col_temp = ws.max_column + 1
+        for i, (row, etiqueta) in enumerate(zip(datos_encontrados, etiquetas_cortas)):
+            ws.cell(row=row, column=col_temp, value=etiqueta)
+        
+        cat_ref = Reference(ws,
+                          min_col=col_temp, min_row=min(datos_encontrados),
+                          max_col=col_temp, max_row=max(datos_encontrados))
+        
+        # Agregar datos con título descriptivo para la leyenda
+        chart.add_data(data_ref, titles_from_data=False)
+        chart.set_categories(cat_ref)
+        
+        # Aplicar configuración de formato de texto para mejorar legibilidad
+        configurar_formato_texto_grafico(chart)
+        
+        # Configurar leyenda básica
+        
+        # Agregar gráfico al worksheet
+        ws.add_chart(chart, posicion)
+        
+        # Limpiar columna temporal
+        for row in datos_encontrados:
+            ws.cell(row=row, column=col_temp, value=None)
+        
+        print(f"✅ Gráfico vertical creado con {len(datos_encontrados)} elementos")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Error creando gráfico vertical: {e}")
+        return False
+
+def crear_grafico_analisis_horizontal(ws, posicion, titulo):
+    """Crea gráfico de líneas para análisis horizontal con leyenda descriptiva"""
+    try:
+        # Buscar datos válidos en columna P (análisis horizontal)
+        datos_encontrados = []
+        
+        # Buscar filas con datos numéricos válidos (después de fila 7)
+        for row in range(8, min(ws.max_row + 1, 30)):
+            try:
+                nombre_cuenta = ws.cell(row=row, column=3).value  # Columna C (nombres)
+                valor_horizontal = ws.cell(row=row, column=16).value  # Columna P (análisis horizontal)
+                
+                if (nombre_cuenta and 
+                    str(nombre_cuenta).strip() and
+                    isinstance(valor_horizontal, (int, float)) and 
+                    abs(valor_horizontal) > 0.01):  # Filtrar valores significativos
+                    
+                    datos_encontrados.append(row)
+                    
+                    if len(datos_encontrados) >= 5:  # Máximo 5 líneas para claridad
+                        break
+                        
+            except Exception:
+                continue
+        
+        if not datos_encontrados:
+            return False
+        
+        # Crear gráfico de líneas con marco bien separado
+        chart = LineChart()
+        chart.title = titulo
+        chart.width = 30  # Tamaño aumentado para mejor visualización del eje X
+        chart.height = 18  # Altura aumentada para dar más espacio a las etiquetas
+        chart.style = 12
+        
+        chart.x_axis.title = "Cuentas"
+        chart.y_axis.title = "Variación (%)"
+        
+        # Referencias de datos y categorías  
+        data_ref = Reference(ws, 
+                           min_col=16, min_row=min(datos_encontrados),
+                           max_col=16, max_row=max(datos_encontrados))
+        
+        # Crear etiquetas más cortas y legibles para las categorías
+        etiquetas_cortas_h = []
+        for row in datos_encontrados:
+            nombre_completo = str(ws.cell(row=row, column=3).value or "")
+            # Procesar nombre para mejor legibilidad
+            nombre_corto = procesar_nombre_para_grafico(nombre_completo)
+            etiquetas_cortas_h.append(nombre_corto)
+        
+        # Agregar etiquetas cortas a una columna temporal
+        col_temp_h = ws.max_column + 2  # Una columna más allá de la vertical
+        for i, (row, etiqueta) in enumerate(zip(datos_encontrados, etiquetas_cortas_h)):
+            ws.cell(row=row, column=col_temp_h, value=etiqueta)
+        
+        cat_ref = Reference(ws,
+                          min_col=col_temp_h, min_row=min(datos_encontrados),
+                          max_col=col_temp_h, max_row=max(datos_encontrados))
+        
+        # Agregar datos con título descriptivo para la leyenda
+        chart.add_data(data_ref, titles_from_data=False)
+        chart.set_categories(cat_ref)
+        
+        # Aplicar configuración de formato de texto para mejorar legibilidad
+        configurar_formato_texto_grafico(chart)
+        
+        # Configurar leyenda básica
+        
+        # Agregar gráfico al worksheet
+        ws.add_chart(chart, posicion)
+        
+        # Limpiar columna temporal
+        for row in datos_encontrados:
+            ws.cell(row=row, column=col_temp_h, value=None)
+        
+        print(f"✅ Gráfico horizontal creado con {len(datos_encontrados)} elementos")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Error creando gráfico horizontal: {e}")
+        return False
