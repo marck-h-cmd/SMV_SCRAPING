@@ -25,7 +25,10 @@ SECRET_KEY = 'django-insecure-+d%ki)i$86xq5sie1u_ij!mdg2$j!%)#q6l97n!pb8ag-)onw+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'smv-scraping.onrender.com',
+    '.onrender.com', 
+]
 
 EXTERNAL_HOSTNAME = os.environ.get('EXTERNAL_HOSTNAME')
 if EXTERNAL_HOSTNAME:
