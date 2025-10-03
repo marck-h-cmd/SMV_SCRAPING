@@ -4,8 +4,6 @@ from openpyxl import load_workbook
 from openpyxl.styles import PatternFill, Border, Side, Font, Alignment
 from openpyxl.utils import get_column_letter
 from openpyxl.utils.cell import range_boundaries
-from openpyxl.formatting.rule import ColorScaleRule
-from openpyxl.styles import Color
 
 
 # Color de relleno de encabezado (Azul Oscuro/Teal)
@@ -117,7 +115,7 @@ def hojas(ws):
 
     elif ws.title == 'Hoja4':
         ws['A1'].value = "ESTADO DE FLUJO DE EFECTIVO"
-        FILAS_GRISES = [8,9,15,28,29,30,43,56,57,58,65,76]
+        FILAS_GRISES = [8,9,10,18,28,47,48,49,62,75,76,77,84,95]
     return FILAS_GRISES
 
 def FormatoSituacionFinanciera(nroHoja, nombre):
@@ -296,8 +294,7 @@ def FormatoFlujoEfectivo(nroHoja, nombre):
                 cell.font = HEADER_FONT
                 cell.border = THIN_BORDER
                 cell.alignment = Alignment(horizontal='center', vertical='center')
-    
-    limpiar_rango_Formato(ws, 'C77:I81')
+    limpiar_rango_Formato(ws, "C96:I100")
 
 def FormatoPatrimonio(wb, nroHoja, nombre):
     ws = nroHoja
@@ -359,7 +356,6 @@ def FormatoPatrimonio(wb, nroHoja, nombre):
     ws.column_dimensions[get_column_letter(2)].width = 5
     ws.column_dimensions[get_column_letter(3)].width = 10
 
-    """
     ws.merge_cells('B8:B31')    # COMBINAR Y CENTRAR - AÑO 2024
     celda2024 = ws['B8']
     celda2024.value = "2024"
@@ -370,7 +366,7 @@ def FormatoPatrimonio(wb, nroHoja, nombre):
     celda2023.value = "2023"
     encabezadosFechasVerticales(celda2023)
 
-    ws.merge_cells('B56:B79')    # COMBINAR Y CENTRAR - AÑO 2023
+    ws.merge_cells('B56:B79')    # COMBINAR Y CENTRAR - AÑO 2022
     celda2022 = ws['B56']
     celda2022.value = "2022"
     encabezadosFechasVerticales(celda2022)
@@ -384,12 +380,6 @@ def FormatoPatrimonio(wb, nroHoja, nombre):
     celda2020 = ws['B104']
     celda2020.value = "2020"
     encabezadosFechasVerticales(celda2020)
-
-    ws.merge_cells('B128:B151')    # COMBINAR Y CENTRAR - AÑO 2019
-    celda2019 = ws['B128']
-    celda2019.value = "2019"
-    encabezadosFechasVerticales(celda2019)
-    """
 
 def limpiar_rango_Formato(ws, rango_excel):
     min_col, min_row, max_col, max_row = range_boundaries(rango_excel)
@@ -451,7 +441,6 @@ def union_archivos(path_xlsx_origen, path_xlsx_destino, columna):
     ws_Destino_hoja4 = wb_destino['Hoja4']
     
     # 3. DEFINIR RANGO Y POSICIÓN
-    rango_a_copiar = 'D7:E83'
     rango_a_copiar_2 = 'C8:AA55'
     fila_destino_inicial = 7
     fila_destino_inicial_2 = 56
@@ -463,7 +452,7 @@ def union_archivos(path_xlsx_origen, path_xlsx_destino, columna):
     copiar_celdas(
         ws_Origen_hoja1,
         ws_Destino_hoja1,
-        rango_a_copiar,
+        'D7:E83',
         fila_destino_inicial,
         columna_destino_inicial
     )
@@ -472,7 +461,7 @@ def union_archivos(path_xlsx_origen, path_xlsx_destino, columna):
     copiar_celdas(
         ws_Origen_hoja2,
         ws_Destino_hoja2,
-        rango_a_copiar,
+        'D7:E83',
         fila_destino_inicial,
         columna_destino_inicial
     )
@@ -502,7 +491,7 @@ def union_archivos(path_xlsx_origen, path_xlsx_destino, columna):
     copiar_celdas(
         ws_Origen_hoja4,
         ws_Destino_hoja4,
-        rango_a_copiar,
+        'D7:E95',
         fila_destino_inicial,
         columna_destino_inicial
     )
@@ -545,8 +534,11 @@ def copiar_celdas(ws_origen, ws_destino, rango_origen: str, fila_inicio_destino:
 def analisis_VH(path_xlsx):
     wb = load_workbook(path_xlsx)
 
-    Ratios = wb.copy_worksheet(wb['Hoja1'])
-    Ratios.title = "Hoja5"
+    try:
+        Ratios = wb['Hoja5']
+    except KeyError:
+        Ratios = wb.copy_worksheet(wb['Hoja1'])
+        Ratios.title = "Hoja5"
 
     Ratios['A1'].value = "RATIOS FINANCIEROS"
 
@@ -594,10 +586,7 @@ def FormatoAnalisis1(ws):
                 cell.fill = SECTION_FILL
             
             if row in range(8, 84):
-                if ((10 <= row <= 25) or (26 <= row <= 44) or (47 <= row <= 59) or (61 <= row <= 73) or (75 <= row <= 83)):
-                    formatoCondicional_EstalaDeColor(ws, row, 10, 14)
                 cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
-                cell.number_format = FORMATO_PORCENTAJE_DOS_DECIMALES
         
         for col in range(16, 20):
             cell = ws.cell(row=row, column=col)
@@ -613,10 +602,7 @@ def FormatoAnalisis1(ws):
                 cell.fill = SECTION_FILL
             
             if row in range(8, 84):
-                if ((10 <= row <= 25) or (26 <= row <= 44) or (47 <= row <= 59) or (61 <= row <= 73) or (75 <= row <= 83)):
-                    formatoCondicional_EstalaDeColor(ws, row, 16, 19)
                 cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
-                cell.number_format = FORMATO_PORCENTAJE_DOS_DECIMALES
 
 def FormatoAnalisis2(ws):
     ws.column_dimensions[get_column_letter(9)].width = 3
@@ -653,10 +639,7 @@ def FormatoAnalisis2(ws):
                 cell.fill = SECTION_FILL
             
             if row in range(8, 33):
-                if (row == 9 or (11 <= row <= 15) or (17 <= row <= 27) or (29 <= row <= 31)):
-                    formatoCondicional_EstalaDeColor(ws, row, 10, 14)
                 cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
-                cell.number_format = FORMATO_PORCENTAJE_DOS_DECIMALES
         
         for col in range(16, 20):
             cell = ws.cell(row=row, column=col)
@@ -672,23 +655,20 @@ def FormatoAnalisis2(ws):
                 cell.fill = SECTION_FILL
             
             if row in range(8, 33):
-                if (row == 9 or (11 <= row <= 15) or (17 <= row <= 27) or (29 <= row <= 31)):
-                    formatoCondicional_EstalaDeColor(ws, row, 16, 19)
                 cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
-                cell.number_format = FORMATO_PORCENTAJE_DOS_DECIMALES
 
 def FormatoAnalisis3(ws):
     ws.column_dimensions[get_column_letter(9)].width = 3
     ws.column_dimensions[get_column_letter(15)].width = 3
     ws.merge_cells('J6:N6')
-    aplicarBorde(ws, 'J6:N76')
+    aplicarBorde(ws, 'J6:N95')
     ws['J6'].value = "Análisis Vertical"
     ws['J6'].fill = ENCABEZADO_NARANJA
     ws['J6'].font = negrita
     ws['J6'].alignment = Alignment(horizontal='center', vertical='center')
 
     ws.merge_cells('P6:S6')
-    aplicarBorde(ws, 'P6:S76')
+    aplicarBorde(ws, 'P6:S95')
     ws['P6'].value = "Análisis Horizontal"
     ws['P6'].fill = ENCABEZADO_NARANJA
     ws['P6'].font = negrita
@@ -697,7 +677,7 @@ def FormatoAnalisis3(ws):
     copiar_celdas(ws,ws,'D7:H7',7,10)
     copiar_celdas(ws,ws,'D7:G7',7,16)
 
-    for row in range(7, 77):
+    for row in range(7, 96):
         for col in range(10, 15):
             cell = ws.cell(row=row, column=col)
             if row == 7:
@@ -707,15 +687,9 @@ def FormatoAnalisis3(ws):
                 cell.border = THIN_BORDER
                 cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
 
-            elif row in [8,9,15,28,29,30,43,56,57,58,65,76]:
-                cell.alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
-                cell.fill = SECTION_FILL
-            
-            if row in range(8, 77):
-                if ((10 <= row <= 14) or (16 <= row <= 27) or (31 <= row <= 42) or (44 <= row <= 55) or (59 <= row <= 64) or (66 <= row <= 75)):
-                    formatoCondicional_EstalaDeColor(ws, row, 10, 14)
+            elif row in [8,9,10,18,28,47,48,49,62,75,76,77,84,95]:
                 cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
-                cell.number_format = FORMATO_PORCENTAJE_DOS_DECIMALES
+                cell.fill = SECTION_FILL
         
         for col in range(16, 20):
             cell = ws.cell(row=row, column=col)
@@ -726,15 +700,9 @@ def FormatoAnalisis3(ws):
                 cell.border = THIN_BORDER
                 cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
 
-            elif row in [8,9,15,28,29,30,43,56,57,58,65,76]:
-                cell.alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
-                cell.fill = SECTION_FILL
-            
-            if row in range(8, 77):
-                if ((10 <= row <= 14) or (16 <= row <= 27) or (31 <= row <= 42) or (44 <= row <= 55) or (59 <= row <= 64) or (66 <= row <= 75)):
-                    formatoCondicional_EstalaDeColor(ws, row, 16, 19)
+            elif row in [8,9,10,18,28,47,48,49,62,75,76,77,84,95]:
                 cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
-                cell.number_format = FORMATO_PORCENTAJE_DOS_DECIMALES
+                cell.fill = SECTION_FILL
 
 def limpiar_rango_Libre(ws, rango_excel):
     BORDE_POR_DEFECTO = Border(left=Side(style=None), 
@@ -763,30 +731,6 @@ def aplicarBorde(ws, rango_excel):
         for col in range(min_col, max_col + 1):
             cell = ws.cell(row=row, column=col)
             cell.border = THIN_BORDER
-
-def formatoCondicional_EstalaDeColor(ws, numero_fila, col_inicio, col_fin):
-    # 1. Construir el string del rango de la fila
-    col_inicio_letra = get_column_letter(col_inicio)
-    col_fin_letra = get_column_letter(col_fin)
-
-    #Definición de rango
-    rango_fila = f"{col_inicio_letra}{numero_fila}:{col_fin_letra}{numero_fila}"
-    
-    # 2. Definir la regla de Escala de Color (Verde es bueno)
-    regla_escala_3_colores = ColorScaleRule(
-        start_color=Color('F8696B'),  # Verde (Alto)
-        mid_color=Color('FFEB84'),    # Amarillo (Medio)
-        end_color=Color('63BE7B'),    # Rojo (Bajo)
-
-        start_type='percent', 
-        mid_type='percent', 
-        end_type='percent',
-                
-        start_value=100,    # Verde
-        mid_value=50,       # Amarillo
-        end_value=0         # Rojo
-    )
-    ws.conditional_formatting.add(rango_fila, regla_escala_3_colores)
 
 def analisis_Ratios(path_xlsx):
     wb = load_workbook(path_xlsx)
@@ -847,7 +791,10 @@ def analisis_Ratios(path_xlsx):
 
 def graficosRatios(path_xlsx):
     wb = load_workbook(path_xlsx)
-    GraRati = wb.create_sheet(title="Hoja6", index=None)
+    try:
+        GraRati = wb['Hoja6']
+    except KeyError:
+        GraRati = wb.create_sheet(title="Hoja6", index=None)
     ws = GraRati
 
     dir_path = os.path.dirname(path_xlsx)
@@ -979,12 +926,10 @@ def graficosRatios(path_xlsx):
     aplicarBorde(ws, 'C30:G37')
     centrar_rango(ws, 'C30:G37')
     aplicarBorde(ws, 'I30:P37')
-    
     centrar_rango(ws, 'I30:P37')
 
     wb.save(path_xlsx)
     
-
 def renombrar(path_xlsx):
     wb = load_workbook(path_xlsx)
     sistFinan = wb['Hoja1']
@@ -1000,9 +945,7 @@ def renombrar(path_xlsx):
     flujos.title = "Estado de Flujo de Efectivo"
     ratios.title = "Ratios Financieros"
     graratios.title = "Gráficos de Ratios Financieros"
-
     wb.save(path_xlsx)
-
 
 def centrar_rango(ws, rango):
     alineacion_centrada = Alignment(horizontal='center', vertical='center')
@@ -1011,3 +954,197 @@ def centrar_rango(ws, rango):
         for col in range(min_col, max_col + 1):
             cell = ws.cell(row=row, column=col)
             cell.alignment = alineacion_centrada
+
+def valor(wb, nombre_hoja, celda):
+    valor = wb[nombre_hoja][celda].value
+    if valor is None:
+        return "0"
+    s = str(valor).strip()
+    # Manejar formato contable con paréntesis (negativos)
+    if s.startswith("(") and s.endswith(")"):
+        s = "-" + s[1:-1]
+
+    # Normalizar separadores para convertir a número
+    if "," in s and "." in s:
+        s = s.replace(".", "").replace(",", ".")
+    elif "," in s:
+        s = s.replace(",", ".")
+
+    try:
+        num = float(s)
+        # Formatear salida con punto miles y coma decimal
+        if num.is_integer():
+            return f"{int(num):,}".replace(",", ".")  # enteros sin decimales
+        else:
+            return f"{num:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+    except ValueError:
+        return "0"
+
+def analisisVertical(path_xlsx):
+    wb = load_workbook(path_xlsx)
+    ws1 = wb['Hoja1']
+    ws2 = wb['Hoja2']
+    ws4 = wb['Hoja4']
+
+    for row in range(8, 84):    # SITUACIÓN FINANCIERA
+        for offset, col in enumerate(range(4, 9)):
+            num = ws1.cell(row=row, column=col).value
+            num = convertir_a_numero(num)
+            den = ws1.cell(row=44, column=col).value
+            den = convertir_a_numero(den)
+
+            if den not in (0, None):
+                resultado = num / den
+            else:
+                resultado = 0.00
+
+            celda_resultado = ws1.cell(row=row, column=10 + offset, value=resultado)
+            celda_resultado.value = resultado
+            celda_resultado.number_format = FORMATO_PORCENTAJE_DOS_DECIMALES
+
+
+    for row in range(8, 33):    # RESULTADOS
+        for offset, col in enumerate(range(4, 9)):
+            num = ws2.cell(row=row, column=col).value
+            num = convertir_a_numero(num)
+            den = ws2.cell(row=8, column=col).value
+            den = convertir_a_numero(den)
+
+            if den not in (0, None):
+                resultado = num / den
+            else:
+                resultado = 0.00
+
+            celda_resultado = ws2.cell(row=row, column=10 + offset, value=resultado)
+            celda_resultado.value = resultado
+            celda_resultado.number_format = FORMATO_PORCENTAJE_DOS_DECIMALES
+
+
+    for row in range(8, 48):    # FLUJO DE EFECTIVO
+        for offset, col in enumerate(range(4, 9)):
+            num = ws4.cell(row=row, column=col).value
+            num = convertir_a_numero(num)
+            den = ws4.cell(row=47, column=col).value
+            den = convertir_a_numero(den)
+
+            if den not in (0, None):
+                resultado = num / den
+            else:
+                resultado = 0.00
+
+            celda_resultado = ws4.cell(row=row, column=10 + offset, value=resultado)
+            celda_resultado.value = resultado
+            celda_resultado.number_format = FORMATO_PORCENTAJE_DOS_DECIMALES
+
+    for row in range(48, 76):    # FLUJO DE EFECTIVO
+        for offset, col in enumerate(range(4, 9)):
+            num = ws4.cell(row=row, column=col).value
+            num = convertir_a_numero(num)
+            den = ws4.cell(row=75, column=col).value
+            den = convertir_a_numero(den)
+
+            if den not in (0, None):
+                resultado = num / den
+            else:
+                resultado = 0.00
+
+            celda_resultado = ws4.cell(row=row, column=10 + offset, value=resultado)
+            celda_resultado.value = resultado
+            celda_resultado.number_format = FORMATO_PORCENTAJE_DOS_DECIMALES
+
+
+    for row in range(77, 96):    # FLUJO DE EFECTIVO
+        for offset, col in enumerate(range(4, 9)):
+            num = ws4.cell(row=row, column=col).value
+            num = convertir_a_numero(num)
+            den = ws4.cell(row=95, column=col).value
+            den = convertir_a_numero(den)
+
+            if den not in (0, None):
+                resultado = num / den
+            else:
+                resultado = 0.00
+
+            celda_resultado = ws4.cell(row=row, column=10 + offset, value=resultado)
+            celda_resultado.value = resultado
+            celda_resultado.number_format = FORMATO_PORCENTAJE_DOS_DECIMALES
+
+    wb.save(path_xlsx)
+
+def analisisHorizontal(path_xlsx):
+    wb = load_workbook(path_xlsx)
+    ws1 = wb['Hoja1']
+    ws2 = wb['Hoja2']
+    ws4 = wb['Hoja4']
+
+    for row in range(8, 84):    # SITUACIÓN FINANCIERA
+        for offset, col in enumerate(range(4, 8)):
+            num = ws1.cell(row=row, column=col).value
+            num = convertir_a_numero(num)
+            den = ws1.cell(row=row, column=col+1).value
+            den = convertir_a_numero(den)
+
+            if den not in (0, None):
+                resultado = (num - den) / den
+            else:
+                resultado = 0.00
+
+            celda_resultado = ws1.cell(row=row, column=16 + offset, value=resultado)
+            celda_resultado.value = resultado
+            celda_resultado.number_format = FORMATO_PORCENTAJE_DOS_DECIMALES
+
+    for row in range(8, 33):    # RESULTADOS
+        for offset, col in enumerate(range(4, 8)):
+            num = ws2.cell(row=row, column=col).value
+            num = convertir_a_numero(num)
+            den = ws2.cell(row=row, column=col+1).value
+            den = convertir_a_numero(den)
+
+            if den not in (0, None):
+                resultado = (num - den) / den
+            else:
+                resultado = 0.00
+
+            celda_resultado = ws2.cell(row=row, column=16 + offset, value=resultado)
+            celda_resultado.value = resultado
+            celda_resultado.number_format = FORMATO_PORCENTAJE_DOS_DECIMALES
+
+    for row in range(8, 96):    # FLUJO DE EFECTIVO
+        for offset, col in enumerate(range(4, 8)):
+            num = ws4.cell(row=row, column=col).value
+            num = convertir_a_numero(num)
+            den = ws4.cell(row=row, column=col+1).value
+            den = convertir_a_numero(den)
+
+            if den not in (0, None):
+                resultado = (num - den) / den
+            else:
+                resultado = 0.00
+
+            celda_resultado = ws4.cell(row=row, column=16 + offset, value=resultado)
+            celda_resultado.value = resultado
+            celda_resultado.number_format = FORMATO_PORCENTAJE_DOS_DECIMALES
+
+    wb.save(path_xlsx)
+
+
+def valor(wb, nombre_hoja, celda):
+    valor = wb[nombre_hoja][celda].value
+    return convertir_a_numero(valor)
+
+def convertir_a_numero(valor): 
+    if valor is None: 
+        return 0.0 
+    s = str(valor).strip() 
+
+    # Manejar paréntesis (negativos contables) 
+
+    if s.startswith("(") and s.endswith(")"): 
+        s = "-" + s[1:-1].strip() 
+    
+    # Eliminar separadores de miles (,) y mantener el punto como decimal
+    s = s.replace(",", "") 
+    try: 
+        return float(s) 
+    except ValueError: 
+        return 0.0
