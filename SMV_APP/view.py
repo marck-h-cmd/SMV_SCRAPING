@@ -12,7 +12,9 @@ import mimetypes
 from django.http import FileResponse
 import logging
 from django.views.decorators.http import require_http_methods
-from SMV_APP.analisis import formato_xls_xlsx, union_archivos, analisis_VH, analisis_Ratios, graficosRatios, renombrar
+from SMV_APP.analisis import union_archivos, analisis_VH, analisis_Ratios, graficosRatios, analisisVertical, analisisHorizontal
+import re
+import shutil
 
 logger = logging.getLogger(__name__)
 
@@ -253,52 +255,77 @@ def analisis(request):
     try:
         # 1. Obtener la ruta de la empresa del JSON del POST
         data = json.loads(request.body)
-        
-        # Asumiendo que el frontend envía la ruta de la carpeta (ej. 'descargas_smv/ENERGIA_DEL_PACIFICO_SA')
         carpeta_empresa = data.get('carpeta_empresa', '') 
 
         empresa_clean = "".join(c for c in carpeta_empresa if c.isalnum() or c in (' ', '-', '_')).rstrip()
         empresa_clean = empresa_clean.replace(' ', '_')
         
         if not empresa_clean:
-             return JsonResponse({'error': 'La ruta de la carpeta de la empresa es requerida.'}, status=400)
-
-        # 2. Definir la base para las rutas (similar a tus otras funciones)
-        # Esto asume que el path es relativo a la raíz del proyecto
-        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            return JsonResponse({'error': 'La ruta de la carpeta de la empresa es requerida.'}, status=400)
         
-        # 3. Construir las rutas dinámicamente
-        
-        # La ruta base donde están todos los archivos .xls o .xlsx
+        # 2. Construir la carpeta base
         DIR_BASE_FINANCIEROS = os.path.join("descargas_smv", empresa_clean)
 
-        formato_xls_xlsx(DIR_BASE_FINANCIEROS)
-        
-        # Asumimos que los archivos tienen nombres predecibles basados en el año y el directorio:
-        RUTA1 = os.path.join(DIR_BASE_FINANCIEROS, "2024-ReporteDetalleInformacionFinanciero.xlsx")
-        RUTA2 = os.path.join(DIR_BASE_FINANCIEROS, "2023-ReporteDetalleInformacionFinanciero.xlsx")
-        RUTA3 = os.path.join(DIR_BASE_FINANCIEROS, "2022-ReporteDetalleInformacionFinanciero.xlsx")
-        RUTA4 = os.path.join(DIR_BASE_FINANCIEROS, "2021-ReporteDetalleInformacionFinanciero.xlsx")
-        RUTA5 = os.path.join(DIR_BASE_FINANCIEROS, "2020-ReporteDetalleInformacionFinanciero.xlsx")
-        
-        # Verificar que la ruta principal (RUTA1) exista antes de proceder
-        if not os.path.exists(RUTA1):
-             return JsonResponse({'error': f"El archivo base (2024) no fue encontrado en: {RUTA1}"}, status=404)
-        
-        # 4. Ejecutar formato, unión y análisis
-        union_archivos(RUTA2, RUTA1, 5)
-        union_archivos(RUTA3, RUTA1, 6)
-        union_archivos(RUTA4, RUTA1, 7)
-        union_archivos(RUTA5, RUTA1, 8)
+        archivos_por_anio = {}
+        year_pattern = re.compile(r"^(\d{4})") 
 
+        # 3. Listar todos los archivos en el directorio de la empresa
+        for filename in os.listdir(DIR_BASE_FINANCIEROS):
+            if filename.lower().endswith(('.xlsx')):
+                match = year_pattern.match(filename)
+                if match:
+                    year = int(match.group(1))
+                    full_path = os.path.join(DIR_BASE_FINANCIEROS, filename)
+                    archivos_por_anio[year] = full_path
+
+        # 4. Ordenar y seleccionar los más recientes
+        años_ordenados = sorted(archivos_por_anio.keys(), reverse=True)
+        rutas_necesarias = [archivos_por_anio[year] for year in años_ordenados[:5]]
+        
+        RUTAS = rutas_necesarias + [None] * (5 - len(rutas_necesarias))
+        RUTA1 = RUTAS[0]  # Más reciente
+        RUTA2, RUTA3, RUTA4, RUTA5 = RUTAS[1:5]
+
+        if not RUTA1:
+            return JsonResponse({'error': "No se encontraron archivos financieros válidos para el análisis."}, status=404)
+
+        # 5. Crear carpeta ANALISIS y duplicar archivo más reciente
+        carpeta_analisis = os.path.join(DIR_BASE_FINANCIEROS, "ANALISIS")
+        os.makedirs(carpeta_analisis, exist_ok=True)
+
+        archivo_nombre = f"ANALISIS-{empresa_clean}.xlsx"
+        RUTA1_DUPLICADO = os.path.join(carpeta_analisis, archivo_nombre)
+
+        shutil.copy(RUTA1, RUTA1_DUPLICADO)
+
+        # ⚡️ Usamos ahora el duplicado como la base de trabajo
+        RUTA1 = RUTA1_DUPLICADO
+
+        # 6. Archivos a unir en el duplicado
+        archivos_union = [
+            (RUTA2, 5),
+            (RUTA3, 6),
+            (RUTA4, 7),
+            (RUTA5, 8),
+        ]
+        
+        for source_path, sheet_index in archivos_union:
+            if source_path and os.path.exists(source_path):
+                union_archivos(source_path, RUTA1, sheet_index)
+            else:
+                logger.warning(f"Archivo fuente para la Hoja {sheet_index} no encontrado. Se omite la unión.")
+
+        # 7. Llamada a funciones de análisis sobre el duplicado
         analisis_VH(RUTA1)
         analisis_Ratios(RUTA1)
         graficosRatios(RUTA1)
-        renombrar(RUTA1)
+        analisisVertical(RUTA1)
+        analisisHorizontal(RUTA1)
+        # renombrar(RUTA1)
 
         return JsonResponse({
             "status": "success", 
-            "message": "Análisis y unión completados con éxito."
+            "message": f"Análisis completado."
         }, status=200)
 
     except Exception as e:
@@ -307,3 +334,4 @@ def analisis(request):
             "status": "error", 
             "message": f"Error interno en la función de análisis: {str(e)}"
         }, status=500)
+
