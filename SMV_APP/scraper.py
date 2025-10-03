@@ -449,21 +449,21 @@ class SMVFinancialScraper:
                     pass
             
             try:
-                enlace_detalle = self.driver.find_elements(
+                enlaces_detalle = self.driver.find_elements(
                     By.XPATH, "//a[contains(@title, 'Ver detalle de Estados Financieros')]"
                 )
-                if enlace_detalle:
-                    self.logger.info("Se encontraron resultados disponibles")
+                if enlaces_detalle:
+                    self.logger.info(f"Se encontraron {len(enlaces_detalle)} resultados disponibles")
                     return True
             except:
                 pass
             
             return False
-            
+        
         except Exception as e:
             self.logger.error(f"Error al verificar resultados: {e}")
             return False
-    
+
     def ver_detalle_estados_financieros(self):
         try:
             self.logger.info("Accediendo a detalle de estados financieros")
@@ -476,11 +476,24 @@ class SMVFinancialScraper:
             max_attempts = 3
             for attempt in range(max_attempts):
                 try:
-                    enlace_detalle = self.wait_for_element_clickable(
+                    # Obtener todos los enlaces
+                    enlaces_detalle = self.driver.find_elements(
                         By.XPATH, "//a[contains(@title, 'Ver detalle de Estados Financieros')]"
                     )
                     
-                    self.driver.execute_script("arguments[0].click();", enlace_detalle)
+                    if not enlaces_detalle:
+                        self.logger.error("No se encontraron enlaces de detalle")
+                        return False, main_window
+                    
+                    # Seleccionar el último enlace (el más actual)
+                    enlace_mas_actual = enlaces_detalle[-1]
+                    self.logger.info(f"Seleccionando el enlace más actual ({len(enlaces_detalle)} encontrados)")
+                    
+                    # Hacer scroll al elemento si es necesario
+                    self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", enlace_mas_actual)
+                    time.sleep(0.5)
+                    
+                    self.driver.execute_script("arguments[0].click();", enlace_mas_actual)
                     time.sleep(4)
                     
                     break
@@ -703,7 +716,7 @@ class SMVFinancialScraper:
 
 def ejecutar_scraping_smv(empresa_nombre, anio_base=2024, rango_anios=5):
     scraper = SMVFinancialScraper(
-        headless=True,
+        headless=False,
         download_path=os.path.join(os.getcwd(), "descargas_smv")
     )
     
