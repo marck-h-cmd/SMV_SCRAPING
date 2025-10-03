@@ -16,3 +16,4 @@ reportlab
 gunicorn
 cryptography
 whitenoise
+Django
