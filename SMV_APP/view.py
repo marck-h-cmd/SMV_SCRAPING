@@ -12,7 +12,7 @@ import mimetypes
 from django.http import FileResponse
 import logging
 from django.views.decorators.http import require_http_methods
-from SMV_APP.analisis import union_archivos, analisis_VH, analisis_Ratios, graficosRatios, analisisVertical, analisisHorizontal
+from SMV_APP.analisis import union_archivos, analisis_VH, analisis_Ratios, graficosRatios, analisisVertical, analisisHorizontal, analisisRatiosCalculo
 import re
 import shutil
 
@@ -321,6 +321,7 @@ def analisis(request):
         graficosRatios(RUTA1)
         analisisVertical(RUTA1)
         analisisHorizontal(RUTA1)
+        analisisRatiosCalculo(RUTA1)
         # renombrar(RUTA1)
 
         return JsonResponse({

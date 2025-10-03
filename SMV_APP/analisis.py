@@ -784,9 +784,10 @@ def analisis_Ratios(path_xlsx):
                 cell.border = THIN_BORDER
                 cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
                 cell.number_format = FORMATO_NUMERICO
-            else:
+            elif row in [8,9,11,12,13]:
                 cell.number_format = FORMATO_NUMERICO_FINANCIERO
-
+            else:
+                cell.number_format = FORMATO_PORCENTAJE_DOS_DECIMALES
     wb.save(path_xlsx)
 
 def graficosRatios(path_xlsx):
@@ -1127,6 +1128,203 @@ def analisisHorizontal(path_xlsx):
 
     wb.save(path_xlsx)
 
+def analisisRatiosCalculo(path_xlsx):
+    wb = load_workbook(path_xlsx)
+    ws1 = wb['Hoja5']
+    ws2 = wb['Hoja2']
+
+    for offset, col in enumerate(range(4, 9)):  # LIQUIDEZ CORRIENTE
+        num = ws1.cell(row=24, column=col).value
+        num = convertir_a_numero(num)
+        den = ws1.cell(row=59, column=col).value
+        den = convertir_a_numero(den)
+
+        if den not in (0, None):
+            resultado = num / den
+        else:
+            resultado = 0.00
+
+        celda_resultado = ws1.cell(row=8, column=11 + offset, value=resultado)
+        celda_resultado.value = resultado
+        celda_resultado.number_format = FORMATO_NUMERICO_FINANCIERO
+
+
+    for offset, col in enumerate(range(4, 9)):  # PRUEBA ÁCIDA
+        num1 = ws1.cell(row=24, column=col).value
+        num1 = convertir_a_numero(num1)
+        num2 = ws1.cell(row=17, column=col).value
+        num2 = convertir_a_numero(num2)
+        den = ws1.cell(row=59, column=col).value
+        den = convertir_a_numero(den)
+
+        if den not in (0, None):
+            resultado = (num1 - num2) / den
+        else:
+            resultado = 0.00
+
+        celda_resultado = ws1.cell(row=9, column=11 + offset, value=resultado)
+        celda_resultado.value = resultado
+        celda_resultado.number_format = FORMATO_NUMERICO_FINANCIERO
+
+    
+    for offset, col in enumerate(range(4, 9)):  # RAZÓN DE DEUDA TOTAL
+        num = ws1.cell(row=73, column=col).value
+        num = convertir_a_numero(num)
+        den = ws1.cell(row=44, column=col).value
+        den = convertir_a_numero(den)
+
+        if den not in (0, None):
+            resultado = num / den
+        else:
+            resultado = 0.00
+
+        celda_resultado = ws1.cell(row=17, column=11 + offset, value=resultado)
+        celda_resultado.value = resultado
+        celda_resultado.number_format = FORMATO_PORCENTAJE_DOS_DECIMALES
+
+
+    for offset, col in enumerate(range(4, 9)):  # RAZÓN DE DEUDA/PATRIMONIO
+        num = ws1.cell(row=73, column=col).value
+        num = convertir_a_numero(num)
+        den = ws1.cell(row=82, column=col).value
+        den = convertir_a_numero(den)
+
+        if den not in (0, None):
+            resultado = num / den
+        else:
+            resultado = 0.00
+
+        celda_resultado = ws1.cell(row=18, column=11 + offset, value=resultado)
+        celda_resultado.value = resultado
+        celda_resultado.number_format = FORMATO_PORCENTAJE_DOS_DECIMALES
+
+
+    for offset, col in enumerate(range(4, 9)):  # MARGEN NETO
+        num = ws2.cell(row=32, column=col).value
+        num = convertir_a_numero(num)
+        den = ws2.cell(row=8, column=col).value
+        den = convertir_a_numero(den)
+
+        if den not in (0, None):
+            resultado = num / den
+        else:
+            resultado = 0.00
+
+        celda_resultado = ws1.cell(row=21, column=11 + offset, value=resultado)
+        celda_resultado.value = resultado
+        celda_resultado.number_format = FORMATO_PORCENTAJE_DOS_DECIMALES
+
+
+    for offset, col in enumerate(range(4, 9)):  # ROA
+        num = ws2.cell(row=32, column=col).value
+        num = convertir_a_numero(num)
+        den = ws1.cell(row=44, column=col).value
+        den = convertir_a_numero(den)
+
+        if den not in (0, None):
+            resultado = num / den
+        else:
+            resultado = 0.00
+
+        celda_resultado = ws1.cell(row=22, column=11 + offset, value=resultado)
+        celda_resultado.value = resultado
+        celda_resultado.number_format = FORMATO_PORCENTAJE_DOS_DECIMALES
+
+
+    for offset, col in enumerate(range(4, 9)):  # ROE
+        num = ws2.cell(row=32, column=col).value
+        num = convertir_a_numero(num)
+        den = ws1.cell(row=82, column=col).value
+        den = convertir_a_numero(den)
+
+        if den not in (0, None):
+            resultado = num / den
+        else:
+            resultado = 0.00
+
+        celda_resultado = ws1.cell(row=23, column=11 + offset, value=resultado)
+        celda_resultado.value = resultado
+        celda_resultado.number_format = FORMATO_PORCENTAJE_DOS_DECIMALES
+
+
+    for offset, col in enumerate(range(4, 8)):  # ROTACIÓN DE CUENTAS POR COBRAR
+        num = ws2.cell(row=8, column=col).value
+        num = convertir_a_numero(num)
+
+        # Valores columna col (D-G)
+        d1 = convertir_a_numero(ws1.cell(row=12, column=col).value)
+        d2 = convertir_a_numero(ws1.cell(row=13, column=col).value)
+        d3 = convertir_a_numero(ws1.cell(row=14, column=col).value)
+        d4 = convertir_a_numero(ws1.cell(row=15, column=col).value)
+        d5 = convertir_a_numero(ws1.cell(row=28, column=col).value)
+        d6 = convertir_a_numero(ws1.cell(row=29, column=col).value)
+        d7 = convertir_a_numero(ws1.cell(row=30, column=col).value)
+        d8 = convertir_a_numero(ws1.cell(row=31, column=col).value)
+
+        # Valores columna col+1 (E-H)
+        d9  = convertir_a_numero(ws1.cell(row=12, column=col+1).value)
+        d10 = convertir_a_numero(ws1.cell(row=13, column=col+1).value)
+        d11 = convertir_a_numero(ws1.cell(row=14, column=col+1).value)
+        d12 = convertir_a_numero(ws1.cell(row=15, column=col+1).value)
+        d13 = convertir_a_numero(ws1.cell(row=28, column=col+1).value)
+        d14 = convertir_a_numero(ws1.cell(row=29, column=col+1).value)
+        d15 = convertir_a_numero(ws1.cell(row=30, column=col+1).value)
+        d16 = convertir_a_numero(ws1.cell(row=31, column=col+1).value)
+
+        den = (d1+d2+d3+d4+d5+d6+d7+d8 + d9+d10+d11+d12+d13+d14+d15+d16) / 2
+
+        if den != 0:
+            resultado = num / den
+        else:
+            resultado = 0.00
+
+        celda_resultado = ws1.cell(row=12, column=11 + offset, value=resultado)
+        celda_resultado.value = resultado
+        celda_resultado.number_format = FORMATO_NUMERICO_FINANCIERO
+    ws1['O12'].value = 0.00
+
+
+    for offset, col in enumerate(range(4, 8)):  # ROTACIÓN DE INVENTARIOS
+        num = ws2.cell(row=9, column=col).value
+        num = convertir_a_numero(num)
+
+        d1 = convertir_a_numero(ws1.cell(row=17, column=col).value)
+        d2 = convertir_a_numero(ws1.cell(row=33, column=col+1).value)
+        d3 = convertir_a_numero(ws1.cell(row=17, column=col).value)
+        d4 = convertir_a_numero(ws1.cell(row=33, column=col+1).value)
+
+        den = (d1+d2+d3+d4) / 2
+
+        if den != 0:
+            resultado = (num / den) * -1
+        else:
+            resultado = 0.00
+
+        celda_resultado = ws1.cell(row=13, column=11 + offset, value=resultado)
+        celda_resultado.value = resultado
+        celda_resultado.number_format = FORMATO_NUMERICO_FINANCIERO
+    ws1['O13'].value = 0.00
+
+
+    for offset, col in enumerate(range(4, 9)):  # ROTACIÓN DE ACTIVOS TOTALES
+        num = ws2.cell(row=8, column=col).value
+        num = convertir_a_numero(num)
+
+        den = convertir_a_numero(ws1.cell(row=44, column=col).value)
+
+        if den != 0:
+            resultado = num / den
+        else:
+            resultado = 0.00
+
+        celda_resultado = ws1.cell(row=14, column=11 + offset, value=resultado)
+        celda_resultado.value = resultado
+        celda_resultado.number_format = FORMATO_NUMERICO_FINANCIERO
+
+
+    
+
+    wb.save(path_xlsx)
 
 def valor(wb, nombre_hoja, celda):
     valor = wb[nombre_hoja][celda].value
