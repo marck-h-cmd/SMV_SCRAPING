@@ -716,14 +716,14 @@ class SMVFinancialScraper:
 
 def ejecutar_scraping_smv(empresa_nombre, anio_base=2024, rango_anios=5):
     scraper = SMVFinancialScraper(
-        headless=True,
+        headless=False,
         download_path=os.path.join(os.getcwd(), "descargas_smv")
     )
     
     return scraper.scrape_financial_data(empresa_nombre, anio_base, rango_anios)
 
 if __name__ == "__main__":
-    empresa = "EMPRESA AGRICOLA GANADERA SALAMANCA S.A.A."
+    empresa = "ADMINISTRADORA JOCKEY PLAZA SHOPPING CENTER S.A."
     
     resultado = ejecutar_scraping_smv(empresa, anio_base=2024, rango_anios=5)
     print(resultado)
