@@ -10,20 +10,9 @@
 pip install -r requirements.txt
 ````
 
-### 2. Aplica las migraciones
 
-```bash
-python manage.py makemigrations
-python manage.py migrate
-```
 
-### 3. (Opcional) Crea un superusuario
-
-```bash
-python manage.py createsuperuser
-```
-
-### 4. Ejecuta el servidor de desarrollo
+### 2. Ejecuta el servidor de desarrollo
 
 ```bash
 python manage.py runserver
