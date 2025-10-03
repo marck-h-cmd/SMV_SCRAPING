@@ -141,7 +141,8 @@ class FinancialStatementAnalyzer:
 def main():
     analyzer = FinancialStatementAnalyzer()
     
-    excel_files = [r"C:\Users\WIND 11\Documents\Marck\Coding\Projects-2025\SMV_SCRAPING\descargas_smv\CEMENTOS_PACASMAYO_SAA\ANALISIS\ANALISIS-CEMENTOS_PACASMAYO_SAA.xlsx"]    
+    excel_files = [r"C:\Users\FELIX\Desktop\CICLO 6\FINANZAS CORPORATIVAS\PROYECTO\SMV_SCRAPING\descargas_smv\ALICORP_SAA\ANALISIS\ANALISIS-ALICORP_SAA.xlsx"]    
+    
     for file_path in excel_files:
         if os.path.exists(file_path):
             print(f"\n{'='*80}")

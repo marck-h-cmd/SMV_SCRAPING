@@ -110,7 +110,7 @@ def formato_xls_xlsx(CARPETA_FINANCIEROS):
             # 3. ABRIR CON OPENPYXL PARA APLICAR ESTILOS MANUALES
             FormatoSituacionFinanciera(situaFinanciera, nombreEmpresa)
             FormatoResultados(estaresultados, nombreEmpresa)
-            FormatoPatrimonio(wb, patrimonio, nombreEmpresa)
+            FormatoPatrimonio(patrimonio, nombreEmpresa)
             FormatoFlujoEfectivo(flujoEfectivo, nombreEmpresa)
 
             # 4. ELIMINAR HOJAS QUE NO SON NECESARIAS
@@ -319,7 +319,7 @@ def FormatoFlujoEfectivo(nroHoja, nombre):
                 cell.alignment = Alignment(horizontal='center', vertical='center')
     limpiar_rango_Formato(ws, "C96:I100")
 
-def FormatoPatrimonio(wb, nroHoja, nombre):
+def FormatoPatrimonio(nroHoja, nombre):
     ws = nroHoja
     nombreEmpresa = nombre
 
@@ -464,7 +464,7 @@ def union_archivos(path_xlsx_origen, path_xlsx_destino, columna):
     ws_Destino_hoja4 = wb_destino['Hoja4']
     
     # 3. DEFINIR RANGO Y POSICIÓN
-    rango_a_copiar_2 = 'C8:AA55'
+    rango_a_copiar_2 = 'C8:AA31'
     fila_destino_inicial = 7
     fila_destino_inicial_2 = 56
     fila_destino_inicial_3 = 104
@@ -488,19 +488,17 @@ def union_archivos(path_xlsx_origen, path_xlsx_destino, columna):
         fila_destino_inicial,
         columna_destino_inicial
     )
-
-    #UNION DE PATRIMONIO - HOJA 3
     """
+    #UNION DE PATRIMONIO - HOJA 3
     if columna == 5:
         copiar_celdas(
             ws_Origen_hoja3,
             ws_Destino_hoja3,
             rango_a_copiar_2,
             fila_destino_inicial_2,
-            columna_destino_inicial - 3
+            columna_destino_inicial - 2
         )
     else:
-    
         copiar_celdas(
             ws_Origen_hoja3,
             ws_Destino_hoja3,
@@ -518,8 +516,6 @@ def union_archivos(path_xlsx_origen, path_xlsx_destino, columna):
         fila_destino_inicial,
         columna_destino_inicial
     )
-    
-    # 5. GUARDAR EL ARCHIVO DESTINO (EL ARCHIVO ORIGEN NO SE MODIFICA)
     wb_destino.save(path_xlsx_destino)
 
 def copiar_celdas(ws_origen, ws_destino, rango_origen: str, fila_inicio_destino: int, columna_inicio_destino: int):    
@@ -577,6 +573,10 @@ def analisis_VH(path_xlsx):
 def FormatoAnalisis1(ws):
     ws.column_dimensions[get_column_letter(9)].width = 3
     ws.column_dimensions[get_column_letter(15)].width = 3
+    for i in range(10,15):
+        ws.column_dimensions[get_column_letter(i)].width = 12
+    for i in range(16,20):
+        ws.column_dimensions[get_column_letter(i)].width = 12
     ws.merge_cells('J6:N6')
     aplicarBorde(ws, 'J6:N83')
     ws['J6'].value = "Análisis Vertical"
@@ -630,6 +630,10 @@ def FormatoAnalisis1(ws):
 def FormatoAnalisis2(ws):
     ws.column_dimensions[get_column_letter(9)].width = 3
     ws.column_dimensions[get_column_letter(15)].width = 3
+    for i in range(10,15):
+        ws.column_dimensions[get_column_letter(i)].width = 12
+    for i in range(16,20):
+        ws.column_dimensions[get_column_letter(i)].width = 12
     ws.merge_cells('J6:N6')
     aplicarBorde(ws, 'J6:N32')
     ws['J6'].value = "Análisis Vertical"
@@ -683,6 +687,10 @@ def FormatoAnalisis2(ws):
 def FormatoAnalisis3(ws):
     ws.column_dimensions[get_column_letter(9)].width = 3
     ws.column_dimensions[get_column_letter(15)].width = 3
+    for i in range(10,15):
+        ws.column_dimensions[get_column_letter(i)].width = 12
+    for i in range(16,20):
+        ws.column_dimensions[get_column_letter(i)].width = 12
     ws.merge_cells('J6:N6')
     aplicarBorde(ws, 'J6:N95')
     ws['J6'].value = "Análisis Vertical"
@@ -713,6 +721,8 @@ def FormatoAnalisis3(ws):
             elif row in [8,9,10,18,28,47,48,49,62,75,76,77,84,95]:
                 cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
                 cell.fill = SECTION_FILL
+            else:
+                cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
         
         for col in range(16, 20):
             cell = ws.cell(row=row, column=col)
@@ -726,6 +736,8 @@ def FormatoAnalisis3(ws):
             elif row in [8,9,10,18,28,47,48,49,62,75,76,77,84,95]:
                 cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
                 cell.fill = SECTION_FILL
+            else:
+                cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
 
 def limpiar_rango_Libre(ws, rango_excel):
     BORDE_POR_DEFECTO = Border(left=Side(style=None), 
@@ -812,690 +824,6 @@ def analisis_Ratios(path_xlsx):
             else:
                 cell.number_format = FORMATO_PORCENTAJE_DOS_DECIMALES
     wb.save(path_xlsx)
-
-def graficosRatios(path_xlsx):
-    wb = load_workbook(path_xlsx)
-    try:
-        GraRati = wb['Hoja6']
-    except KeyError:
-        GraRati = wb.create_sheet(title="Hoja6", index=None)
-    ws = GraRati
-
-    dir_path = os.path.dirname(path_xlsx)
-    nombre = os.path.basename(dir_path)
-    nombreEmpresa = nombre.replace('_', ' ')
-
-    ws['A1'].value = "GRÁFICOS DE RATIOS"
-    ws['A1'].font = fuente_titulo
-    ws['A3'].value = "Periodo: Anual"
-    ws['A3'].font = negrita
-    ws['A4'].value = f"Empresa: {nombreEmpresa}"
-    ws['A4'].font = negrita
-    ws['A5'].value = "Tipo: Individual"
-    ws['A5'].font = negrita
-
-    ws['C7'].value = "RATIOS DE LIQUIDEZ"
-
-    ws.column_dimensions[get_column_letter(1)].width = 3
-    ws.column_dimensions[get_column_letter(2)].width = 3
-    for i in range(3,30):
-        ws.column_dimensions[get_column_letter(i)].width = 15
-    for i in [5,8,11,14]:
-        ws.column_dimensions[get_column_letter(i)].width = 32
-
-    ws.merge_cells('C7:G7')
-    ws.merge_cells('E8:E14')
-    ws['C7'].value = "RATIOS DE LIQUIDEZ"
-    ws['C7'].fill = ENCABEZADO_PURPURA
-    ws['C7'].font = HEADER_FONT
-    ws['C7'].font = Font(size=12, bold=True)
-    ws.merge_cells('C8:D8')
-    ws['C8'].value = "Liquidez Corriente"
-    ws['C8'].fill = ENCABEZADO_NARANJA
-    ws['C9'].value = "Año"
-    ws['C9'].fill =ENCABEZADO_CELESTE
-    ws['D9'].value = "Valor"
-    ws['D9'].fill =ENCABEZADO_CELESTE
-    ws.merge_cells('F8:G8')
-    ws['F8'].value = "Prueba Ácida"
-    ws['F8'].fill = ENCABEZADO_NARANJA
-    ws['F9'].value = "Año"
-    ws['F9'].fill =ENCABEZADO_CELESTE
-    ws['G9'].value = "Valor"
-    ws['G9'].fill =ENCABEZADO_CELESTE
-
-    ws.merge_cells('I7:P7')
-    ws.merge_cells('K8:K13')
-    ws.merge_cells('N8:N13')
-    ws['I7'].value = "RATIOS DE GESTIÓN"
-    ws['I7'].fill = ENCABEZADO_PURPURA
-    ws['I7'].font = HEADER_FONT
-    ws['I7'].font = Font(size=12, bold=True)
-    ws.merge_cells('I8:J8')
-    ws['I8'].value = "Rotación de Cuentas por cobrar"
-    ws['I8'].fill = ENCABEZADO_NARANJA
-    ws['I9'].value = "Año"
-    ws['I9'].fill =ENCABEZADO_CELESTE
-    ws['J9'].value = "Valor"
-    ws['J9'].fill =ENCABEZADO_CELESTE
-    ws.merge_cells('L8:M8')
-    ws['L8'].value = "Rotación de Inventarios"
-    ws['L8'].fill = ENCABEZADO_NARANJA
-    ws['L9'].value = "Año"
-    ws['L9'].fill =ENCABEZADO_CELESTE
-    ws['M9'].value = "Valor"
-    ws['M9'].fill =ENCABEZADO_CELESTE
-    ws.merge_cells('O8:P8')
-    ws['O8'].value = "Rotación de Activos Totales"
-    ws['O8'].fill = ENCABEZADO_NARANJA
-    ws['O9'].value = "Año"
-    ws['O9'].fill = ENCABEZADO_CELESTE
-    ws['P9'].value = "Valor"
-    ws['P9'].fill = ENCABEZADO_CELESTE
-
-    ws.merge_cells('C30:G30')
-    ws.merge_cells('E31:E37')
-    ws['C30'].value = "RATIOS DE ENDEUDAMIENTO"
-    ws['C30'].fill = ENCABEZADO_PURPURA
-    ws['C30'].font = HEADER_FONT
-    ws['C30'].font = Font(size=12, bold=True)
-    ws.merge_cells('C31:D31')
-    ws['C31'].value = "Razón de deuda total"
-    ws['C31'].fill = ENCABEZADO_NARANJA
-    ws['C32'].value = "Año"
-    ws['C32'].fill = ENCABEZADO_CELESTE
-    ws['D32'].value = "Valor"
-    ws['D32'].fill = ENCABEZADO_CELESTE
-    ws.merge_cells('F31:G31')
-    ws['F31'].value = "Razón de deuda/patrimonio"
-    ws['F31'].fill = ENCABEZADO_NARANJA
-    ws['F32'].value = "Año"
-    ws['F32'].fill = ENCABEZADO_CELESTE
-    ws['G32'].value = "Valor"
-    ws['G32'].fill = ENCABEZADO_CELESTE
-
-    ws.merge_cells('I30:P30')
-    ws.merge_cells('K31:K37')
-    ws.merge_cells('N31:N37')
-    ws['I30'].value = "RATIOS DE RENTABILIDAD"
-    ws['I30'].fill = ENCABEZADO_PURPURA
-    ws['I30'].font = HEADER_FONT
-    ws['I30'].font = Font(size=12, bold=True)
-    ws.merge_cells('I31:J31')
-    ws['I31'].value = "Margen neto"
-    ws['I31'].fill = ENCABEZADO_NARANJA
-    ws['I32'].value = "Año"
-    ws['I32'].fill = ENCABEZADO_CELESTE
-    ws['J32'].value = "Valor"
-    ws['J32'].fill = ENCABEZADO_CELESTE
-    ws.merge_cells('L31:M31')
-    ws['L31'].value = "ROA"
-    ws['L31'].fill = ENCABEZADO_NARANJA
-    ws['L32'].value = "Año"
-    ws['L32'].fill = ENCABEZADO_CELESTE
-    ws['M32'].value = "Valor"
-    ws['M32'].fill = ENCABEZADO_CELESTE
-    ws.merge_cells('O31:P31')
-    ws['O31'].value = "ROE"
-    ws['O31'].fill = ENCABEZADO_NARANJA
-    ws['O32'].value = "Año"
-    ws['O32'].fill = ENCABEZADO_CELESTE
-    ws['P32'].value = "Valor"
-    ws['P32'].fill = ENCABEZADO_CELESTE
-
-    aplicarBorde(ws, 'C7:G14')
-    centrar_rango(ws, 'C7:G14')
-    aplicarBorde(ws, 'I7:P13')
-    centrar_rango(ws, 'I7:P13')
-    aplicarBorde(ws, 'C30:G37')
-    centrar_rango(ws, 'C30:G37')
-    aplicarBorde(ws, 'I30:P37')
-    centrar_rango(ws, 'I30:P37')
-
-    wb.save(path_xlsx)
-    
-def renombrar(path_xlsx):
-    wb = load_workbook(path_xlsx)
-    sistFinan = wb['Hoja1']
-    resultados = wb['Hoja2']
-    patrimonio = wb['Hoja3']
-    flujos = wb['Hoja4']
-    ratios = wb['Hoja5']
-    graratios = wb['Hoja6']
-
-    sistFinan.title = "Estado de Situación Financiera"
-    resultados.title = "Estado de Resultados"
-    patrimonio.title = "Estado de Patrimonio Neto"
-    flujos.title = "Estado de Flujo de Efectivo"
-    ratios.title = "Ratios Financieros"
-    graratios.title = "Gráficos de Ratios Financieros"
-    wb.save(path_xlsx)
-
-def centrar_rango(ws, rango):
-    alineacion_centrada = Alignment(horizontal='center', vertical='center')
-    min_col, min_row, max_col, max_row = range_boundaries(rango)
-    for row in range(min_row, max_row + 1):
-        for col in range(min_col, max_col + 1):
-            cell = ws.cell(row=row, column=col)
-            cell.alignment = alineacion_centrada
-
-def valor(wb, nombre_hoja, celda):
-    valor = wb[nombre_hoja][celda].value
-    if valor is None:
-        return "0"
-    s = str(valor).strip()
-    # Manejar formato contable con paréntesis (negativos)
-    if s.startswith("(") and s.endswith(")"):
-        s = "-" + s[1:-1]
-
-    # Normalizar separadores para convertir a número
-    if "," in s and "." in s:
-        s = s.replace(".", "").replace(",", ".")
-    elif "," in s:
-        s = s.replace(",", ".")
-
-    try:
-        num = float(s)
-        # Formatear salida con punto miles y coma decimal
-        if num.is_integer():
-            return f"{int(num):,}".replace(",", ".")  # enteros sin decimales
-        else:
-            return f"{num:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
-    except ValueError:
-        return "0"
-
-def analisisVertical(path_xlsx):
-    wb = load_workbook(path_xlsx)
-    ws1 = wb['Hoja1']
-    ws2 = wb['Hoja2']
-    ws4 = wb['Hoja4']
-
-    for row in range(8, 84):    # SITUACIÓN FINANCIERA
-        for offset, col in enumerate(range(4, 9)):
-            num = ws1.cell(row=row, column=col).value
-            num = convertir_a_numero(num)
-            den = ws1.cell(row=44, column=col).value
-            den = convertir_a_numero(den)
-
-            if den not in (0, None):
-                resultado = num / den
-            else:
-                resultado = 0.00
-
-            celda_resultado = ws1.cell(row=row, column=10 + offset, value=resultado)
-            celda_resultado.value = resultado
-            celda_resultado.number_format = FORMATO_PORCENTAJE_DOS_DECIMALES
-
-
-    for row in range(8, 33):    # RESULTADOS
-        for offset, col in enumerate(range(4, 9)):
-            num = ws2.cell(row=row, column=col).value
-            num = convertir_a_numero(num)
-            den = ws2.cell(row=8, column=col).value
-            den = convertir_a_numero(den)
-
-            if den not in (0, None):
-                resultado = num / den
-            else:
-                resultado = 0.00
-
-            celda_resultado = ws2.cell(row=row, column=10 + offset, value=resultado)
-            celda_resultado.value = resultado
-            celda_resultado.number_format = FORMATO_PORCENTAJE_DOS_DECIMALES
-
-
-    for row in range(8, 48):    # FLUJO DE EFECTIVO
-        for offset, col in enumerate(range(4, 9)):
-            num = ws4.cell(row=row, column=col).value
-            num = convertir_a_numero(num)
-            den = ws4.cell(row=47, column=col).value
-            den = convertir_a_numero(den)
-
-            if den not in (0, None):
-                resultado = num / den
-            else:
-                resultado = 0.00
-
-            celda_resultado = ws4.cell(row=row, column=10 + offset, value=resultado)
-            celda_resultado.value = resultado
-            celda_resultado.number_format = FORMATO_PORCENTAJE_DOS_DECIMALES
-
-    for row in range(48, 76):    # FLUJO DE EFECTIVO
-        for offset, col in enumerate(range(4, 9)):
-            num = ws4.cell(row=row, column=col).value
-            num = convertir_a_numero(num)
-            den = ws4.cell(row=75, column=col).value
-            den = convertir_a_numero(den)
-
-            if den not in (0, None):
-                resultado = num / den
-            else:
-                resultado = 0.00
-
-            celda_resultado = ws4.cell(row=row, column=10 + offset, value=resultado)
-            celda_resultado.value = resultado
-            celda_resultado.number_format = FORMATO_PORCENTAJE_DOS_DECIMALES
-
-
-    for row in range(77, 96):    # FLUJO DE EFECTIVO
-        for offset, col in enumerate(range(4, 9)):
-            num = ws4.cell(row=row, column=col).value
-            num = convertir_a_numero(num)
-            den = ws4.cell(row=95, column=col).value
-            den = convertir_a_numero(den)
-
-            if den not in (0, None):
-                resultado = num / den
-            else:
-                resultado = 0.00
-
-            celda_resultado = ws4.cell(row=row, column=10 + offset, value=resultado)
-            celda_resultado.value = resultado
-            celda_resultado.number_format = FORMATO_PORCENTAJE_DOS_DECIMALES
-
-    wb.save(path_xlsx)
-
-def analisisHorizontal(path_xlsx):
-    wb = load_workbook(path_xlsx)
-    ws1 = wb['Hoja1']
-    ws2 = wb['Hoja2']
-    ws4 = wb['Hoja4']
-
-    for row in range(8, 84):    # SITUACIÓN FINANCIERA
-        for offset, col in enumerate(range(4, 8)):
-            num = ws1.cell(row=row, column=col).value
-            num = convertir_a_numero(num)
-            den = ws1.cell(row=row, column=col+1).value
-            den = convertir_a_numero(den)
-
-            if den not in (0, None):
-                resultado = (num - den) / den
-            else:
-                resultado = 0.00
-
-            celda_resultado = ws1.cell(row=row, column=16 + offset, value=resultado)
-            celda_resultado.value = resultado
-            celda_resultado.number_format = FORMATO_PORCENTAJE_DOS_DECIMALES
-
-    for row in range(8, 33):    # RESULTADOS
-        for offset, col in enumerate(range(4, 8)):
-            num = ws2.cell(row=row, column=col).value
-            num = convertir_a_numero(num)
-            den = ws2.cell(row=row, column=col+1).value
-            den = convertir_a_numero(den)
-
-            if den not in (0, None):
-                resultado = (num - den) / den
-            else:
-                resultado = 0.00
-
-            celda_resultado = ws2.cell(row=row, column=16 + offset, value=resultado)
-            celda_resultado.value = resultado
-            celda_resultado.number_format = FORMATO_PORCENTAJE_DOS_DECIMALES
-
-    for row in range(8, 96):    # FLUJO DE EFECTIVO
-        for offset, col in enumerate(range(4, 8)):
-            num = ws4.cell(row=row, column=col).value
-            num = convertir_a_numero(num)
-            den = ws4.cell(row=row, column=col+1).value
-            den = convertir_a_numero(den)
-
-            if den not in (0, None):
-                resultado = (num - den) / den
-            else:
-                resultado = 0.00
-
-            celda_resultado = ws4.cell(row=row, column=16 + offset, value=resultado)
-            celda_resultado.value = resultado
-            celda_resultado.number_format = FORMATO_PORCENTAJE_DOS_DECIMALES
-
-    wb.save(path_xlsx)
-
-def analisisRatiosCalculo(path_xlsx):
-    wb = load_workbook(path_xlsx)
-    ws1 = wb['Hoja5']
-    ws2 = wb['Hoja2']
-
-    for offset, col in enumerate(range(4, 9)):  # LIQUIDEZ CORRIENTE
-        num = ws1.cell(row=24, column=col).value
-        num = convertir_a_numero(num)
-        den = ws1.cell(row=59, column=col).value
-        den = convertir_a_numero(den)
-
-        if den not in (0, None):
-            resultado = num / den
-        else:
-            resultado = 0.00
-
-        celda_resultado = ws1.cell(row=8, column=11 + offset, value=resultado)
-        celda_resultado.value = resultado
-        celda_resultado.number_format = FORMATO_NUMERICO_FINANCIERO
-
-
-    for offset, col in enumerate(range(4, 9)):  # PRUEBA ÁCIDA
-        num1 = ws1.cell(row=24, column=col).value
-        num1 = convertir_a_numero(num1)
-        num2 = ws1.cell(row=17, column=col).value
-        num2 = convertir_a_numero(num2)
-        den = ws1.cell(row=59, column=col).value
-        den = convertir_a_numero(den)
-
-        if den not in (0, None):
-            resultado = (num1 - num2) / den
-        else:
-            resultado = 0.00
-
-        celda_resultado = ws1.cell(row=9, column=11 + offset, value=resultado)
-        celda_resultado.value = resultado
-        celda_resultado.number_format = FORMATO_NUMERICO_FINANCIERO
-
-    
-    for offset, col in enumerate(range(4, 9)):  # RAZÓN DE DEUDA TOTAL
-        num = ws1.cell(row=73, column=col).value
-        num = convertir_a_numero(num)
-        den = ws1.cell(row=44, column=col).value
-        den = convertir_a_numero(den)
-
-        if den not in (0, None):
-            resultado = num / den
-        else:
-            resultado = 0.00
-
-        celda_resultado = ws1.cell(row=17, column=11 + offset, value=resultado)
-        celda_resultado.value = resultado
-        celda_resultado.number_format = FORMATO_PORCENTAJE_DOS_DECIMALES
-
-
-    for offset, col in enumerate(range(4, 9)):  # RAZÓN DE DEUDA/PATRIMONIO
-        num = ws1.cell(row=73, column=col).value
-        num = convertir_a_numero(num)
-        den = ws1.cell(row=82, column=col).value
-        den = convertir_a_numero(den)
-
-        if den not in (0, None):
-            resultado = num / den
-        else:
-            resultado = 0.00
-
-        celda_resultado = ws1.cell(row=18, column=11 + offset, value=resultado)
-        celda_resultado.value = resultado
-        celda_resultado.number_format = FORMATO_PORCENTAJE_DOS_DECIMALES
-
-
-    for offset, col in enumerate(range(4, 9)):  # MARGEN NETO
-        num = ws2.cell(row=32, column=col).value
-        num = convertir_a_numero(num)
-        den = ws2.cell(row=8, column=col).value
-        den = convertir_a_numero(den)
-
-        if den not in (0, None):
-            resultado = num / den
-        else:
-            resultado = 0.00
-
-        celda_resultado = ws1.cell(row=21, column=11 + offset, value=resultado)
-        celda_resultado.value = resultado
-        celda_resultado.number_format = FORMATO_PORCENTAJE_DOS_DECIMALES
-
-
-    for offset, col in enumerate(range(4, 9)):  # ROA
-        num = ws2.cell(row=32, column=col).value
-        num = convertir_a_numero(num)
-        den = ws1.cell(row=44, column=col).value
-        den = convertir_a_numero(den)
-
-        if den not in (0, None):
-            resultado = num / den
-        else:
-            resultado = 0.00
-
-        celda_resultado = ws1.cell(row=22, column=11 + offset, value=resultado)
-        celda_resultado.value = resultado
-        celda_resultado.number_format = FORMATO_PORCENTAJE_DOS_DECIMALES
-
-
-    for offset, col in enumerate(range(4, 9)):  # ROE
-        num = ws2.cell(row=32, column=col).value
-        num = convertir_a_numero(num)
-        den = ws1.cell(row=82, column=col).value
-        den = convertir_a_numero(den)
-
-        if den not in (0, None):
-            resultado = num / den
-        else:
-            resultado = 0.00
-
-        celda_resultado = ws1.cell(row=23, column=11 + offset, value=resultado)
-        celda_resultado.value = resultado
-        celda_resultado.number_format = FORMATO_PORCENTAJE_DOS_DECIMALES
-
-
-    for offset, col in enumerate(range(4, 8)):  # ROTACIÓN DE CUENTAS POR COBRAR
-        num = ws2.cell(row=8, column=col).value
-        num = convertir_a_numero(num)
-
-        # Valores columna col (D-G)
-        d1 = convertir_a_numero(ws1.cell(row=12, column=col).value)
-        d2 = convertir_a_numero(ws1.cell(row=13, column=col).value)
-        d3 = convertir_a_numero(ws1.cell(row=14, column=col).value)
-        d4 = convertir_a_numero(ws1.cell(row=15, column=col).value)
-        d5 = convertir_a_numero(ws1.cell(row=28, column=col).value)
-        d6 = convertir_a_numero(ws1.cell(row=29, column=col).value)
-        d7 = convertir_a_numero(ws1.cell(row=30, column=col).value)
-        d8 = convertir_a_numero(ws1.cell(row=31, column=col).value)
-
-        # Valores columna col+1 (E-H)
-        d9  = convertir_a_numero(ws1.cell(row=12, column=col+1).value)
-        d10 = convertir_a_numero(ws1.cell(row=13, column=col+1).value)
-        d11 = convertir_a_numero(ws1.cell(row=14, column=col+1).value)
-        d12 = convertir_a_numero(ws1.cell(row=15, column=col+1).value)
-        d13 = convertir_a_numero(ws1.cell(row=28, column=col+1).value)
-        d14 = convertir_a_numero(ws1.cell(row=29, column=col+1).value)
-        d15 = convertir_a_numero(ws1.cell(row=30, column=col+1).value)
-        d16 = convertir_a_numero(ws1.cell(row=31, column=col+1).value)
-
-        den = (d1+d2+d3+d4+d5+d6+d7+d8 + d9+d10+d11+d12+d13+d14+d15+d16) / 2
-
-        if den != 0:
-            resultado = num / den
-        else:
-            resultado = 0.00
-
-        celda_resultado = ws1.cell(row=12, column=11 + offset, value=resultado)
-        celda_resultado.value = resultado
-        celda_resultado.number_format = FORMATO_NUMERICO_FINANCIERO
-    ws1['O12'].value = 0.00
-
-
-    for offset, col in enumerate(range(4, 8)):  # ROTACIÓN DE INVENTARIOS
-        num = ws2.cell(row=9, column=col).value
-        num = convertir_a_numero(num)
-
-        d1 = convertir_a_numero(ws1.cell(row=17, column=col).value)
-        d2 = convertir_a_numero(ws1.cell(row=33, column=col+1).value)
-        d3 = convertir_a_numero(ws1.cell(row=17, column=col).value)
-        d4 = convertir_a_numero(ws1.cell(row=33, column=col+1).value)
-
-        den = (d1+d2+d3+d4) / 2
-
-        if den != 0:
-            resultado = (num / den) * -1
-        else:
-            resultado = 0.00
-
-        celda_resultado = ws1.cell(row=13, column=11 + offset, value=resultado)
-        celda_resultado.value = resultado
-        celda_resultado.number_format = FORMATO_NUMERICO_FINANCIERO
-    ws1['O13'].value = 0.00
-
-
-    for offset, col in enumerate(range(4, 9)):  # ROTACIÓN DE ACTIVOS TOTALES
-        num = ws2.cell(row=8, column=col).value
-        num = convertir_a_numero(num)
-
-        den = convertir_a_numero(ws1.cell(row=44, column=col).value)
-
-        if den != 0:
-            resultado = num / den
-        else:
-            resultado = 0.00
-
-        celda_resultado = ws1.cell(row=14, column=11 + offset, value=resultado)
-        celda_resultado.value = resultado
-        celda_resultado.number_format = FORMATO_NUMERICO_FINANCIERO
-
-
-    
-
-    wb.save(path_xlsx)
-
-def valor(wb, nombre_hoja, celda):
-    valor = wb[nombre_hoja][celda].value
-    return convertir_a_numero(valor)
-
-def convertir_a_numero(valor): 
-    if valor is None: 
-        return 0.0 
-    s = str(valor).strip() 
-
-    # Manejar paréntesis (negativos contables) 
-
-    if s.startswith("(") and s.endswith(")"): 
-        s = "-" + s[1:-1].strip() 
-    
-    # Eliminar separadores de miles (,) y mantener el punto como decimal
-    s = s.replace(",", "") 
-    try: 
-        return float(s) 
-    except ValueError: 
-        return 0.0
-    
-def extraer_ratios(ws, fila_inicio, fila_fin, col_inicio, col_fin):
-    """
-    Convierte la tabla de ratios en un diccionario, filtrando encabezados de sección
-    """
-    datos_ratios = {}
-
-    # Encabezados (años)
-    anios = []
-    for col in range(col_inicio, col_fin+1):
-        val = ws.cell(row=fila_inicio, column=col).value
-        if isinstance(val, (int, float)):
-            val = str(int(val))
-        else:
-            val = str(val).strip() if val else ""
-        anios.append(val)
-
-    # Lista de encabezados de sección a excluir
-    encabezados_excluir = [
-        "RATIOS DE LIQUIDEZ", 
-        "RATIOS DE GESTIÓN", 
-        "RATIOS DE ENDEUDAMIENTO", 
-        "RATIOS DE RENTABILIDAD",
-        "RATIOS DE LIQUIDEZ Y SOLVENCIA",
-        "RATIOS DE GESTIÓN O ACTIVIDAD", 
-        "RATIOS DE ENDEUDAMIENTO O APALANCAMIENTO",
-        "RATIOS DE RENTABILIDAD O RENDIMIENTO"
-    ]
-
-    # Iterar cada fila de ratios
-    for fila in range(fila_inicio+1, fila_fin+1):
-        nombre_ratio = ws.cell(row=fila, column=col_inicio-1).value
-        
-        # Filtrar filas vacías y encabezados de sección
-        if not nombre_ratio:
-            continue
-            
-        nombre_ratio = str(nombre_ratio).strip()
-        
-        # Excluir encabezados de sección (en mayúsculas generalmente)
-        if (nombre_ratio.upper() in [e.upper() for e in encabezados_excluir] or 
-            nombre_ratio.startswith('RATIOS DE')):
-            continue
-
-        datos_ratios[nombre_ratio] = {}
-
-        # Extraer valores, manejando None
-        for idx, col in enumerate(range(col_inicio, col_fin+1)):
-            valor = ws.cell(row=fila, column=col).value
-            
-            # Convertir a float si es numérico, mantener None si es texto vacío
-            if isinstance(valor, (int, float)):
-                datos_ratios[nombre_ratio][anios[idx]] = float(valor)
-            elif valor and str(valor).strip().replace('.', '').isdigit():
-                datos_ratios[nombre_ratio][anios[idx]] = float(valor)
-            else:
-                datos_ratios[nombre_ratio][anios[idx]] = 0.0  # Default a 0 en lugar de None
-
-    return datos_ratios
-
-def copiar_celdas(ws_origen, ws_destino, rango_origen: str, fila_inicio_destino: int, columna_inicio_destino: int):    
-    # Obtener las coordenadas del rango de origen
-    try:
-        min_col, min_row, max_col, max_row = range_boundaries(rango_origen) 
-    except ValueError:
-        print(f"Error: Rango '{rango_origen}' no es válido.")
-        return
-
-    fila_destino = fila_inicio_destino
-    
-    # Iterar sobre las filas y columnas del rango de origen
-    for row in ws_origen.iter_rows(min_row=min_row, max_row=max_row, min_col=min_col, max_col=max_col):
-        col_destino = columna_inicio_destino
-        
-        for cell_origen in row:
-            # Obtener la celda de destino
-            cell_destino = ws_destino.cell(row=fila_destino, column=col_destino)
-            
-            # 1. Copiar Valor: Solo si la celda tiene un valor (ignora celdas combinadas secundarias)
-            if cell_origen.value is not None:
-                cell_destino.value = cell_origen.value 
-                
-                # 2. Copiar Formato Numérico
-                if cell_origen.number_format:
-                    cell_destino.number_format = FORMATO_NUMERICO_FINANCIERO
-            else:
-                # Opcional: Asegurar que la celda destino también esté vacía si el origen lo está
-                cell_destino.value = None
-
-            col_destino += 1
-        fila_destino += 1
-    
-
-
-
-
-def renombrar(path_xlsx):
-    wb = load_workbook(path_xlsx)
-    sistFinan = wb['Hoja1']
-    resultados = wb['Hoja2']
-    patrimonio = wb['Hoja3']
-    flujos = wb['Hoja4']
-    ratios = wb['Hoja5']
-    graratios = wb['Hoja6']
-
-    sistFinan.sheet_view.showGridLines = False
-    resultados.sheet_view.showGridLines = False
-    patrimonio.sheet_view.showGridLines = False
-    flujos.sheet_view.showGridLines = False
-    ratios.sheet_view.showGridLines = False
-    graratios.sheet_view.showGridLines = False
-
-    sistFinan.title = "Estado de Situación Financiera"
-    resultados.title = "Estado de Resultados"
-    patrimonio.title = "Estado de Patrimonio Neto"
-    flujos.title = "Estado de Flujo de Efectivo"
-    ratios.title = "Ratios Financieros"
-    graratios.title = "Gráficos de Ratios Financieros"
-    wb.save(path_xlsx)
-
-def centrar_rango(ws, rango):
-    alineacion_centrada = Alignment(horizontal='center', vertical='center')
-    min_col, min_row, max_col, max_row = range_boundaries(rango)
-    for row in range(min_row, max_row + 1):
-        for col in range(min_col, max_col + 1):
-            cell = ws.cell(row=row, column=col)
-            cell.alignment = alineacion_centrada
 
 def analisisVertical(path_xlsx):
     wb = load_workbook(path_xlsx)
@@ -1860,9 +1188,9 @@ def analisisRatiosCalculo(path_xlsx):
     rangos_con_longitud = [
         ("C", 10, 5),
         ("F", 10, 5),
-        ("I", 10, 4),
-        ("L", 10, 4),
-        ("O", 10, 4),
+        ("I", 10, 5),
+        ("L", 10, 5),
+        ("O", 10, 5),
         ("C", 33, 5),
         ("F", 33, 5),
         ("I", 33, 5),
@@ -1888,15 +1216,15 @@ def analisisRatiosCalculo(path_xlsx):
 
          {"origen_fila": 12, "origen_col_ini": 11, 
          "destino_col": "J", "destino_fila_ini": 10, 
-         "cantidad": 4},
+         "cantidad": 5},
 
          {"origen_fila": 13, "origen_col_ini": 11, 
          "destino_col": "M", "destino_fila_ini": 10, 
-         "cantidad": 4},
+         "cantidad": 5},
 
          {"origen_fila": 14, "origen_col_ini": 11, 
          "destino_col": "P", "destino_fila_ini": 10, 
-         "cantidad": 4},
+         "cantidad": 5},
 
          {"origen_fila": 17, "origen_col_ini": 11, 
          "destino_col": "D", "destino_fila_ini": 33, 
@@ -1927,6 +1255,266 @@ def analisisRatiosCalculo(path_xlsx):
                 ws6[f"{m['destino_col']}{m['destino_fila_ini'] + i}"].number_format = FORMATO_PORCENTAJE_DOS_DECIMALES
             else:
                 ws6[f"{m['destino_col']}{m['destino_fila_ini'] + i}"].number_format = FORMATO_NUMERICO_FINANCIERO
+
+    wb.save(path_xlsx)
+
+def valor(wb, nombre_hoja, celda):
+    valor = wb[nombre_hoja][celda].value
+    return convertir_a_numero(valor)
+
+def convertir_a_numero(valor): 
+    if valor is None: 
+        return 0.0 
+    s = str(valor).strip() 
+
+    # Manejar paréntesis (negativos contables) 
+
+    if s.startswith("(") and s.endswith(")"): 
+        s = "-" + s[1:-1].strip() 
+    
+    # Eliminar separadores de miles (,) y mantener el punto como decimal
+    s = s.replace(",", "") 
+    try: 
+        return float(s) 
+    except ValueError: 
+        return 0.0
+    
+def extraer_ratios(ws, fila_inicio, fila_fin, col_inicio, col_fin):
+    """
+    Convierte la tabla de ratios en un diccionario, filtrando encabezados de sección
+    """
+    datos_ratios = {}
+
+    # Encabezados (años)
+    anios = []
+    for col in range(col_inicio, col_fin+1):
+        val = ws.cell(row=fila_inicio, column=col).value
+        if isinstance(val, (int, float)):
+            val = str(int(val))
+        else:
+            val = str(val).strip() if val else ""
+        anios.append(val)
+
+    # Lista de encabezados de sección a excluir
+    encabezados_excluir = [
+        "RATIOS DE LIQUIDEZ", 
+        "RATIOS DE GESTIÓN", 
+        "RATIOS DE ENDEUDAMIENTO", 
+        "RATIOS DE RENTABILIDAD",
+        "RATIOS DE LIQUIDEZ Y SOLVENCIA",
+        "RATIOS DE GESTIÓN O ACTIVIDAD", 
+        "RATIOS DE ENDEUDAMIENTO O APALANCAMIENTO",
+        "RATIOS DE RENTABILIDAD O RENDIMIENTO"
+    ]
+
+    # Iterar cada fila de ratios
+    for fila in range(fila_inicio+1, fila_fin+1):
+        nombre_ratio = ws.cell(row=fila, column=col_inicio-1).value
+        
+        # Filtrar filas vacías y encabezados de sección
+        if not nombre_ratio:
+            continue
+            
+        nombre_ratio = str(nombre_ratio).strip()
+        
+        # Excluir encabezados de sección (en mayúsculas generalmente)
+        if (nombre_ratio.upper() in [e.upper() for e in encabezados_excluir] or 
+            nombre_ratio.startswith('RATIOS DE')):
+            continue
+
+        datos_ratios[nombre_ratio] = {}
+
+        # Extraer valores, manejando None
+        for idx, col in enumerate(range(col_inicio, col_fin+1)):
+            valor = ws.cell(row=fila, column=col).value
+            
+            # Convertir a float si es numérico, mantener None si es texto vacío
+            if isinstance(valor, (int, float)):
+                datos_ratios[nombre_ratio][anios[idx]] = float(valor)
+            elif valor and str(valor).strip().replace('.', '').isdigit():
+                datos_ratios[nombre_ratio][anios[idx]] = float(valor)
+            else:
+                datos_ratios[nombre_ratio][anios[idx]] = 0.0  # Default a 0 en lugar de None
+
+    return datos_ratios
+
+def copiar_celdas(ws_origen, ws_destino, rango_origen: str, fila_inicio_destino: int, columna_inicio_destino: int):    
+    # Obtener las coordenadas del rango de origen
+    try:
+        min_col, min_row, max_col, max_row = range_boundaries(rango_origen) 
+    except ValueError:
+        print(f"Error: Rango '{rango_origen}' no es válido.")
+        return
+
+    fila_destino = fila_inicio_destino
+    
+    # Iterar sobre las filas y columnas del rango de origen
+    for row in ws_origen.iter_rows(min_row=min_row, max_row=max_row, min_col=min_col, max_col=max_col):
+        col_destino = columna_inicio_destino
+        
+        for cell_origen in row:
+            # Obtener la celda de destino
+            cell_destino = ws_destino.cell(row=fila_destino, column=col_destino)
+            
+            # 1. Copiar Valor: Solo si la celda tiene un valor (ignora celdas combinadas secundarias)
+            if cell_origen.value is not None:
+                cell_destino.value = cell_origen.value 
+                
+                # 2. Copiar Formato Numérico
+                if cell_origen.number_format:
+                    cell_destino.number_format = FORMATO_NUMERICO_FINANCIERO
+            else:
+                # Opcional: Asegurar que la celda destino también esté vacía si el origen lo está
+                cell_destino.value = None
+
+            col_destino += 1
+        fila_destino += 1
+
+
+def analisisVertical(path_xlsx):
+    wb = load_workbook(path_xlsx)
+    ws1 = wb['Hoja1']
+    ws2 = wb['Hoja2']
+    ws4 = wb['Hoja4']
+
+    for row in range(8, 84):    # SITUACIÓN FINANCIERA
+        for offset, col in enumerate(range(4, 9)):
+            num = ws1.cell(row=row, column=col).value
+            num = convertir_a_numero(num)
+            den = ws1.cell(row=44, column=col).value
+            den = convertir_a_numero(den)
+
+            if den not in (0, None):
+                resultado = num / den
+            else:
+                resultado = 0.00
+
+            celda_resultado = ws1.cell(row=row, column=10 + offset, value=resultado)
+            celda_resultado.value = resultado
+            celda_resultado.number_format = FORMATO_PORCENTAJE_DOS_DECIMALES
+
+
+    for row in range(8, 33):    # RESULTADOS
+        for offset, col in enumerate(range(4, 9)):
+            num = ws2.cell(row=row, column=col).value
+            num = convertir_a_numero(num)
+            den = ws2.cell(row=8, column=col).value
+            den = convertir_a_numero(den)
+
+            if den not in (0, None):
+                resultado = num / den
+            else:
+                resultado = 0.00
+
+            celda_resultado = ws2.cell(row=row, column=10 + offset, value=resultado)
+            celda_resultado.value = resultado
+            celda_resultado.number_format = FORMATO_PORCENTAJE_DOS_DECIMALES
+
+
+    for row in range(8, 48):    # FLUJO DE EFECTIVO
+        for offset, col in enumerate(range(4, 9)):
+            num = ws4.cell(row=row, column=col).value
+            num = convertir_a_numero(num)
+            den = ws4.cell(row=47, column=col).value
+            den = convertir_a_numero(den)
+
+            if den not in (0, None):
+                resultado = num / den
+            else:
+                resultado = 0.00
+
+            celda_resultado = ws4.cell(row=row, column=10 + offset, value=resultado)
+            celda_resultado.value = resultado
+            celda_resultado.number_format = FORMATO_PORCENTAJE_DOS_DECIMALES
+
+    for row in range(48, 76):    # FLUJO DE EFECTIVO
+        for offset, col in enumerate(range(4, 9)):
+            num = ws4.cell(row=row, column=col).value
+            num = convertir_a_numero(num)
+            den = ws4.cell(row=75, column=col).value
+            den = convertir_a_numero(den)
+
+            if den not in (0, None):
+                resultado = num / den
+            else:
+                resultado = 0.00
+
+            celda_resultado = ws4.cell(row=row, column=10 + offset, value=resultado)
+            celda_resultado.value = resultado
+            celda_resultado.number_format = FORMATO_PORCENTAJE_DOS_DECIMALES
+
+
+    for row in range(77, 96):    # FLUJO DE EFECTIVO
+        for offset, col in enumerate(range(4, 9)):
+            num = ws4.cell(row=row, column=col).value
+            num = convertir_a_numero(num)
+            den = ws4.cell(row=95, column=col).value
+            den = convertir_a_numero(den)
+
+            if den not in (0, None):
+                resultado = num / den
+            else:
+                resultado = 0.00
+
+            celda_resultado = ws4.cell(row=row, column=10 + offset, value=resultado)
+            celda_resultado.value = resultado
+            celda_resultado.number_format = FORMATO_PORCENTAJE_DOS_DECIMALES
+
+    wb.save(path_xlsx)
+
+def analisisHorizontal(path_xlsx):
+    wb = load_workbook(path_xlsx)
+    ws1 = wb['Hoja1']
+    ws2 = wb['Hoja2']
+    ws4 = wb['Hoja4']
+
+    for row in range(8, 84):    # SITUACIÓN FINANCIERA
+        for offset, col in enumerate(range(4, 8)):
+            num = ws1.cell(row=row, column=col).value
+            num = convertir_a_numero(num)
+            den = ws1.cell(row=row, column=col+1).value
+            den = convertir_a_numero(den)
+
+            if den not in (0, None):
+                resultado = (num - den) / den
+            else:
+                resultado = 0.00
+
+            celda_resultado = ws1.cell(row=row, column=16 + offset, value=resultado)
+            celda_resultado.value = resultado
+            celda_resultado.number_format = FORMATO_PORCENTAJE_DOS_DECIMALES
+
+    for row in range(8, 33):    # RESULTADOS
+        for offset, col in enumerate(range(4, 8)):
+            num = ws2.cell(row=row, column=col).value
+            num = convertir_a_numero(num)
+            den = ws2.cell(row=row, column=col+1).value
+            den = convertir_a_numero(den)
+
+            if den not in (0, None):
+                resultado = (num - den) / den
+            else:
+                resultado = 0.00
+
+            celda_resultado = ws2.cell(row=row, column=16 + offset, value=resultado)
+            celda_resultado.value = resultado
+            celda_resultado.number_format = FORMATO_PORCENTAJE_DOS_DECIMALES
+
+    for row in range(8, 96):    # FLUJO DE EFECTIVO
+        for offset, col in enumerate(range(4, 8)):
+            num = ws4.cell(row=row, column=col).value
+            num = convertir_a_numero(num)
+            den = ws4.cell(row=row, column=col+1).value
+            den = convertir_a_numero(den)
+
+            if den not in (0, None):
+                resultado = (num - den) / den
+            else:
+                resultado = 0.00
+
+            celda_resultado = ws4.cell(row=row, column=16 + offset, value=resultado)
+            celda_resultado.value = resultado
+            celda_resultado.number_format = FORMATO_PORCENTAJE_DOS_DECIMALES
 
     wb.save(path_xlsx)
 
@@ -1999,7 +1587,7 @@ def numerosglobales(path_xlsx):
             for cell in row:
                 # Saltar encabezados en D7:H7 solo en Hoja1, Hoja2 y Hoja4
                 if ws.title in ("Hoja1", "Hoja2", "Hoja4"):
-                    if cell.row == 7 and 4 <= cell.column <= 8:  # D=4, H=8
+                    if cell.row == 7 and 4 <= cell.column <= 20:  # D=4, S=20
                         continue
 
                 orig = cell.value
@@ -2008,16 +1596,20 @@ def numerosglobales(path_xlsx):
                 if parsed is None:
                     continue
 
+                # Si el valor es cero, reemplazar por "-"
                 if round(parsed, 2) == 0:
                     cell.value = "-"
                     cell.number_format = "General"
                 else:
-                    cell.value = parsed
-                    cell.number_format = FORMATO_NUMERICO_FINANCIERO
+                    # Mantener formato de porcentaje si lo tiene
+                    if cell.number_format and "%" in str(cell.number_format):
+                        cell.value = parsed
+                    else:
+                        cell.value = parsed
+                        cell.number_format = FORMATO_NUMERICO_FINANCIERO
 
     wb.save(path_xlsx)
     return True
-    
 
 def calcular_posiciones_graficos(ws):
     """
@@ -2025,7 +1617,7 @@ def calcular_posiciones_graficos(ws):
     """
     # Encontrar una columna segura a la derecha de los datos con más separación
     ultima_columna_datos = ws.max_column
-    columna_grafico = ultima_columna_datos + 5  # 5 columnas de separación (más espacio)
+    columna_grafico = ultima_columna_datos + 1  # 1 columna de separación (más espacio)
     
     # Convertir a letra de columna
     from openpyxl.utils import get_column_letter
@@ -2049,27 +1641,27 @@ def crear_graficos_analisis(path_xlsx):
     
     try:
         # Procesar hojas principales después del renombrado
-        hojas_principales = ['Estado de Situación Financiera', 'Estado de Resultados']
+        hojas_principales = ['Hoja1', 'Hoja2', 'Hoja4']
         
         for nombre_hoja in hojas_principales:
             if nombre_hoja not in wb.sheetnames:
                 continue
-                
+
             ws = wb[nombre_hoja]
             print(f"📊 Creando gráficos en: {nombre_hoja}")
-            
+
             # Calcular posiciones óptimas para evitar superposiciones
             pos_vertical, pos_horizontal = calcular_posiciones_graficos(ws)
             print(f"   📍 Posiciones: Vertical={pos_vertical}, Horizontal={pos_horizontal}")
-            
+
             # Crear gráfico vertical (columna J - análisis vertical)
             if crear_grafico_analisis_vertical(ws, pos_vertical, f"Análisis Vertical - {nombre_hoja}"):
                 graficos_creados += 1
-                
+
             # Crear gráfico horizontal (columna P - análisis horizontal) 
             if crear_grafico_analisis_horizontal(ws, pos_horizontal, f"Análisis Horizontal - {nombre_hoja}"):
                 graficos_creados += 1
-        
+
         if graficos_creados > 0:
             wb.save(path_xlsx)
             print(f"✅ {graficos_creados} gráficos creados exitosamente")
@@ -2260,10 +1852,6 @@ def crear_grafico_analisis_vertical(ws, posicion, titulo):
         # Agregar gráfico al worksheet
         ws.add_chart(chart, posicion)
         
-        # Limpiar columna temporal
-        for row in datos_encontrados:
-            ws.cell(row=row, column=col_temp, value=None)
-        
         print(f"✅ Gráfico vertical creado con {len(datos_encontrados)} elementos")
         return True
         
@@ -2339,13 +1927,9 @@ def crear_grafico_analisis_horizontal(ws, posicion, titulo):
         configurar_formato_texto_grafico(chart)
         
         # Configurar leyenda básica
-        
+        # vertical
         # Agregar gráfico al worksheet
         ws.add_chart(chart, posicion)
-        
-        # Limpiar columna temporal
-        for row in datos_encontrados:
-            ws.cell(row=row, column=col_temp_h, value=None)
         
         print(f"✅ Gráfico horizontal creado con {len(datos_encontrados)} elementos")
         return True
@@ -2355,7 +1939,7 @@ def crear_grafico_analisis_horizontal(ws, posicion, titulo):
         return False
 
 
-def graficosRatios(path_xlsx):
+def graficosRatios(nombre, path_xlsx):
     
     wb = load_workbook(path_xlsx)
     
@@ -2369,8 +1953,6 @@ def graficosRatios(path_xlsx):
 
     ws = GraRati
 
-    dir_path = os.path.dirname(path_xlsx)
-    nombre = os.path.basename(dir_path)
     nombreEmpresa = nombre.replace('_', ' ')
 
     # Configuración inicial de la hoja
@@ -2389,96 +1971,29 @@ def graficosRatios(path_xlsx):
     for i in range(3, 30):
         ws.column_dimensions[get_column_letter(i)].width = 15
     for i in [5, 8, 11, 14]:
-        ws.column_dimensions[get_column_letter(i)].width = 32
-    print("Hola bro")
-    # analisisRatiosCalculo(path_xlsx)
-    # Crear datos de ejemplo para los ratios
-    datos_ratios = extraer_ratios(GrafRati, fila_inicio=7, fila_fin=23, col_inicio=11, col_fin=15)
-    print(datos_ratios)
-    rangos = {
-    "Liquidez Corriente": ("C10", "D10"),  
-    "Prueba Ácida": ("F10", "G10"),
-    "Rotación de Cuentas por cobrar": ("I10", "J10"),
-    "Rotación de Inventarios": ("L10", "M10"),
-    "Rotación de Activos Totales": ("O10", "P10"),
-    "Razón de deuda total": ("C33", "D33"),
-    "Razón de deuda/patrimonio": ("F33", "G33"),
-    "Margen neto": ("I33", "J33"),
-    "ROA": ("L33", "M33"),
-    "ROE": ("O33", "P33")
-    }
+        ws.column_dimensions[get_column_letter(i)].width = 25
+    for i in range(15,30):
+        ws.row_dimensions[i].height = 20
+    ws.row_dimensions[2].height = 5
 
-    anios = ["2024", "2023", "2022", "2021", "2020"]
-
-    for indicador, (col_anio, col_valor) in rangos.items():
-        col_letra_anio, fila_inicio = coordinate_from_string(col_anio)
-        col_letra_valor, _ = coordinate_from_string(col_valor)
-
-        for i, anio in enumerate(anios):
-            fila = fila_inicio + i
-            # Insertar año
-            ws[f"{col_letra_anio}{fila}"].value = anio
-            # Insertar valor (si existe en el diccionario)
-            valor = datos_ratios.get(indicador, {}).get(anio, None)
-            ws[f"{col_letra_valor}{fila}"].value = valor
-
-
-    df = pd.DataFrame(datos_ratios).T  # Transponer para que los indicadores sean filas
-    df.index.name = "Indicador"
-    df = df.reset_index()
-    
-    # Pivotear para que quede Año como columna
-    df = df.melt(id_vars=["Indicador"], var_name="Año", value_name="Valor")
-    
-    # Crear columnas individuales para cada indicador
-    df_pivot = df.pivot(index="Año", columns="Indicador", values="Valor").reset_index()
-    
-    # Renombrar columnas para que coincidan con las que usas en gráficos
-    df_pivot.rename(columns={
-        "Liquidez Corriente": "Liquidez_Corriente",
-        "Prueba Ácida": "Prueba_Acida",
-        "Rotación de Cuentas por cobrar": "Rotacion_CtasCobrar",
-        "Rotación de Inventarios": "Rotacion_Inventarios",
-        "Rotación de Activos Totales": "Rotacion_ActivosTotales",
-        "Razón de deuda total": "Razon_DeudaTotal",
-        "Razón de deuda/patrimonio": "Razon_DeudaPatrimonio",
-        "Margen neto": "Margen_Neto",
-        "ROA": "ROA",
-        "ROE": "ROE"
-    }, inplace=True)
-
-    try:
-        # Crear gráficos en memoria
-        crear_grafico_liquidez(df_pivot, ws)
-        crear_grafico_gestion(df_pivot, ws)
-        crear_grafico_endeudamiento(df_pivot, ws)
-        crear_grafico_rentabilidad(df_pivot, ws)
-
-        # Aplicar formatos y bordes
-        # aplicar_formatos_tablas(ws)
-        
-    except Exception as e:
-        print(f"Error al crear gráficos: {e}")
-        # En caso de error, al menos guardar la estructura básica
-        aplicar_formatos_tablas(ws)
-        ws['C16'].value = f"Error al generar gráficos: {str(e)}"
-        ws['C16'].font = Font(color="FF0000", italic=True)
-    
+    aplicar_formatos_tablas(ws)
     wb.save(path_xlsx)
     
 def analizar_valores(path_xlsx):
     
     wb = load_workbook(path_xlsx)
-    ws = GraRati
+    # Crear hoja para gráficos
     if 'Hoja6' in wb.sheetnames:
         GraRati = wb['Hoja6']
     else:
         GraRati = wb.create_sheet(title="Hoja6", index=None)
 
     GrafRati = wb['Hoja5']
+
+    ws = GraRati
+    
      # Crear datos de ejemplo para los ratios
     datos_ratios = extraer_ratios(GrafRati, fila_inicio=7, fila_fin=23, col_inicio=11, col_fin=15)
-    print(datos_ratios)
     rangos = {
     "Liquidez Corriente": ("C10", "D10"),  
     "Prueba Ácida": ("F10", "G10"),
@@ -2491,20 +2006,6 @@ def analizar_valores(path_xlsx):
     "ROA": ("L33", "M33"),
     "ROE": ("O33", "P33")
     }
-
-    anios = ["2024", "2023", "2022", "2021", "2020"]
-
-    for indicador, (col_anio, col_valor) in rangos.items():
-        col_letra_anio, fila_inicio = coordinate_from_string(col_anio)
-        col_letra_valor, _ = coordinate_from_string(col_valor)
-
-        for i, anio in enumerate(anios):
-            fila = fila_inicio + i
-            # Insertar año
-            ws[f"{col_letra_anio}{fila}"].value = anio
-            # Insertar valor (si existe en el diccionario)
-            valor = datos_ratios.get(indicador, {}).get(anio, None)
-            ws[f"{col_letra_valor}{fila}"].value = valor
 
 
     df = pd.DataFrame(datos_ratios).T  # Transponer para que los indicadores sean filas
@@ -2543,18 +2044,15 @@ def analizar_valores(path_xlsx):
         
     except Exception as e:
         print(f"Error al crear gráficos: {e}")
-        # En caso de error, al menos guardar la estructura básica
-        aplicar_formatos_tablas(ws)
         ws['C16'].value = f"Error al generar gráficos: {str(e)}"
         ws['C16'].font = Font(color="FF0000", italic=True)
         
-        wb.save(path_xlsx)
+    wb.save(path_xlsx)
 
 def crear_grafico_liquidez(df, ws):
     """Crear gráfico para ratios de liquidez - Versión corregida"""
     try:
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
-        print("gaaaaaaa")
         # Gráfico de Liquidez Corriente
         ax1.bar(df['Año'], df['Liquidez_Corriente'], color=['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7'])
         ax1.set_title('Liquidez Corriente', fontweight='bold')
@@ -2579,7 +2077,7 @@ def crear_grafico_liquidez(df, ws):
         img = Image(img_path)
         img.width = 600
         img.height = 300
-        ws.add_image(img, 'C15')
+        ws.add_image(img, 'C16')
         
         # El archivo se mantendrá hasta que Excel lo procese
         
@@ -2618,9 +2116,9 @@ def crear_grafico_gestion(df, ws):
         plt.close(fig)
         
         img = Image(img_path)
-        img.width = 800
+        img.width = 950
         img.height = 300
-        ws.add_image(img, 'I15')
+        ws.add_image(img, 'I16')
         
     except Exception as e:
         print(f"Error en gráfico de gestión: {e}")
@@ -2707,7 +2205,7 @@ def crear_grafico_rentabilidad(df, ws):
 
         # Insertar en Excel
         img = Image(img_path)
-        img.width = 800   # más ancho
+        img.width = 950   # más ancho
         img.height = 350  # más alto
         ws.add_image(img, "I39")
 
@@ -2721,7 +2219,6 @@ def aplicar_formatos_tablas(ws):
     ws.merge_cells('C7:G7')
     ws['C7'].value = "RATIOS DE LIQUIDEZ"
     ws['C7'].fill = ENCABEZADO_PURPURA
-    ws['C7'].font = Font(size=12, bold=True, color="FFFFFF")
     
     # Configurar tablas
     configurar_tabla_liquidez(ws)
@@ -2732,8 +2229,8 @@ def aplicar_formatos_tablas(ws):
     # Aplicar bordes
     aplicarBorde(ws, 'C7:G14')
     centrar_rango(ws, 'C7:G14')
-    aplicarBorde(ws, 'I7:P13')
-    centrar_rango(ws, 'I7:P13')
+    aplicarBorde(ws, 'I7:P14')
+    centrar_rango(ws, 'I7:P14')
     aplicarBorde(ws, 'C30:G37')
     centrar_rango(ws, 'C30:G37')
     aplicarBorde(ws, 'I30:P37')
@@ -2771,8 +2268,8 @@ def configurar_tabla_rentabilidad(ws):
 
 def configurar_tabla_liquidez(ws):
     ws.merge_cells('I7:P7')
-    ws.merge_cells('K8:K13')
-    ws.merge_cells('N8:N13')
+    ws.merge_cells('K8:K14')
+    ws.merge_cells('N8:N14')
     ws['I7'].value = "RATIOS DE GESTIÓN"
     ws['I7'].fill = ENCABEZADO_PURPURA
     ws['I7'].font = HEADER_FONT
@@ -2803,6 +2300,7 @@ def configurar_tabla_gestion(ws):
     """Configurar tabla de ratios de liquidez"""
     # Mantener tu estructura original de tablas
     ws.merge_cells('C8:D8')
+    ws.merge_cells('E8:E14')
     ws['C8'].value = "Liquidez Corriente"
     ws['C8'].fill = ENCABEZADO_NARANJA
     ws['C9'].value = "Año"
@@ -2841,14 +2339,12 @@ def configurar_tabla_endeudamiento(ws):
     ws['G32'].fill = ENCABEZADO_CELESTE
 
 
-
 def centrar_rango(ws, rango):
     """Centrar contenido en un rango de celdas"""
     min_col, min_row, max_col, max_row = range_boundaries(rango)
     for row in range(min_row, max_row + 1):
         for col in range(min_col, max_col + 1):
             ws.cell(row=row, column=col).alignment = Alignment(horizontal='center', vertical='center')
-
 
 
 def renombrar(path_xlsx):
@@ -2860,12 +2356,19 @@ def renombrar(path_xlsx):
     ratios = wb['Hoja5']
     graratios = wb['Hoja6']
 
-    sistFinan.title = "Estado de Situación Financiera"
-    resultados.title = "Estado de Resultados"
-    patrimonio.title = "Estado de Patrimonio Neto"
-    flujos.title = "Estado de Flujo de Efectivo"
-    ratios.title = "Ratios Financieros"
-    graratios.title = "Gráficos de Ratios Financieros"
+    sistFinan.sheet_view.showGridLines = False
+    resultados.sheet_view.showGridLines = False
+    patrimonio.sheet_view.showGridLines = False
+    flujos.sheet_view.showGridLines = False
+    ratios.sheet_view.showGridLines = False
+    graratios.sheet_view.showGridLines = False
+
+    # sistFinan.title = "Estado de Situación Financiera"
+    # resultados.title = "Estado de Resultados"
+    # patrimonio.title = "Estado de Patrimonio Neto"
+    # flujos.title = "Estado de Flujo de Efectivo"
+    # ratios.title = "Ratios Financieros"
+    # graratios.title = "Gráficos de Ratios Financieros"
 
     wb.save(path_xlsx)
 

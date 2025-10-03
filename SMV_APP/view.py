@@ -13,6 +13,7 @@ from django.http import FileResponse
 import logging
 from django.views.decorators.http import require_http_methods
 from SMV_APP.analisis import *
+from SMV_APP.gemini import *
 import re
 import shutil
 from SMV_APP.gemini import FinancialStatementAnalyzer
@@ -62,7 +63,7 @@ def verificar_archivos(request):
                     file_path = os.path.join(full_path, filename)
                     
           
-                    if filename.lower().endswith(( '.xlsx')):
+                    if filename.lower().endswith(( '.xls')):
                         try:
                             stat = os.stat(file_path)
                             
@@ -266,6 +267,8 @@ def analisis(request):
         # 2. Construir la carpeta base
         DIR_BASE_FINANCIEROS = os.path.join("descargas_smv", empresa_clean)
 
+        formato_xls_xlsx(DIR_BASE_FINANCIEROS)
+
         archivos_por_anio = {}
         year_pattern = re.compile(r"^(\d{4})") 
 
@@ -300,6 +303,8 @@ def analisis(request):
 
         # ⚡️ Usamos ahora el duplicado como la base de trabajo
         RUTA1 = RUTA1_DUPLICADO
+        
+        # 3. ABRIR CON OPENPYXL PARA APLICAR ESTILOS MANUALES
 
         # 6. Archivos a unir en el duplicado
         archivos_union = [
@@ -316,16 +321,18 @@ def analisis(request):
                 logger.warning(f"Archivo fuente para la Hoja {sheet_index} no encontrado. Se omite la unión.")
 
         # 7. Llamada a funciones de análisis sobre el duplicado
-        
         analisis_VH(RUTA1)
         analisis_Ratios(RUTA1)
-        graficosRatios(RUTA1)
+        graficosRatios(empresa_clean, RUTA1)
         analisisVertical(RUTA1)
         analisisHorizontal(RUTA1)
-       # analisisRatiosCalculo(RUTA1)
-       # analizar_valores(RUTA1)
-        
-        # renombrar(RUTA1)
+        crear_graficos_analisis(RUTA1)
+        analisisRatiosCalculo(RUTA1)
+        analizar_valores(RUTA1)
+
+        # 8. Modifica formato a coma decimal y punto en miles
+        numerosglobales(RUTA1)
+        renombrar(RUTA1)
         
         analyzer= FinancialStatementAnalyzer()
         analisis_gemini = analyzer.analyze_financial_statements(RUTA1)
