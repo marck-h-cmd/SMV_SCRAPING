@@ -12,7 +12,7 @@ import mimetypes
 from django.http import FileResponse
 import logging
 from django.views.decorators.http import require_http_methods
-from SMV_APP.analisis import union_archivos, analisis_VH, analisis_Ratios, graficosRatios, analisisVertical, analisisHorizontal, analisisRatiosCalculo
+from SMV_APP.analisis import *
 import re
 import shutil
 from SMV_APP.gemini import FinancialStatementAnalyzer
@@ -316,12 +316,15 @@ def analisis(request):
                 logger.warning(f"Archivo fuente para la Hoja {sheet_index} no encontrado. Se omite la unión.")
 
         # 7. Llamada a funciones de análisis sobre el duplicado
+        
         analisis_VH(RUTA1)
         analisis_Ratios(RUTA1)
         graficosRatios(RUTA1)
         analisisVertical(RUTA1)
         analisisHorizontal(RUTA1)
-        analisisRatiosCalculo(RUTA1)
+       # analisisRatiosCalculo(RUTA1)
+       # analizar_valores(RUTA1)
+        
         # renombrar(RUTA1)
         
         analyzer= FinancialStatementAnalyzer()
