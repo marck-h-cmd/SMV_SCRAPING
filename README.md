@@ -1,4 +1,9 @@
+## Requerimientos
+-Tener python y django instalado
 
+```bash
+pip install Django
+````
 
 
 
