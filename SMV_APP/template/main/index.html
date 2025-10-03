@@ -47,6 +47,10 @@
             top: 0;
             z-index: 10;
         }
+
+        .radio-item input[type="radio"] {
+            accent-color: #667eea;
+        }
     </style>
 </head>
 
@@ -79,20 +83,59 @@
                             class="w-full p-3 border-2 border-gray-200 rounded-xl text-gray-700 bg-gray-50 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200 transition-all"
                             required>
                             <option value="">Seleccione una empresa</option>
-                            <option value="ENERGIA DEL PACIFICO S.A.">ENERGIA DEL PACIFICO S.A.</option>
-                            <option value="banco-credito">BANCO DE CREDITO DEL PERU</option>
-                            <option value="southern-peru">SOUTHERN PERU COPPER CORPORATION</option>
-                            <option value="telefonica">TELEFONICA DEL PERU S.A.A.</option>
-                            <option value="buenaventura">COMPAÑIA DE MINAS BUENAVENTURA S.A.A.</option>
-                            <option value="intercorp">INTERCORP FINANCIAL SERVICES INC.</option>
-                            <option value="rimac-seguros">RIMAC SEGUROS Y REASEGUROS</option>
-                            <option value="luz-sur">LUZ DEL SUR S.A.A.</option>
-                            <option value="volcan">VOLCAN COMPAÑIA MINERA S.A.A.</option>
-                            <option value="union-andina">UNION ANDINA DE CEMENTOS S.A.A.</option>
+                            <!-- Todas las opciones se cargarán dinámicamente -->
                         </select>
                     </div>
 
-
+                    
+                <!-- Filtros por Rubro -->
+                <div class="mb-6">
+                    <label class="form-label block text-gray-700 font-semibold mb-3 text-sm">
+                        <i class="fas fa-filter mr-1"></i> Filtrar por Rubro:
+                    </label>
+                    <div class="radio-grid grid grid-cols-2 md:grid-cols-4 gap-3" id="rubroFilters">
+                        <label
+                            class="radio-item bg-gray-50 p-3 rounded-xl cursor-pointer border-2 border-gray-200 hover:border-blue-300 transition-all flex items-center gap-2">
+                            <input type="radio" name="rubro" value="todos" checked class="rubro-radio">
+                            <span class="radio-label text-sm font-medium">Todos</span>
+                        </label>
+                        <label
+                            class="radio-item bg-gray-50 p-3 rounded-xl cursor-pointer border-2 border-gray-200 hover:border-blue-300 transition-all flex items-center gap-2">
+                            <input type="radio" name="rubro" value="bancos" class="rubro-radio">
+                            <span class="radio-label text-sm font-medium">Bancos</span>
+                        </label>
+                        <label
+                            class="radio-item bg-gray-50 p-3 rounded-xl cursor-pointer border-2 border-gray-200 hover:border-blue-300 transition-all flex items-center gap-2">
+                            <input type="radio" name="rubro" value="seguros" class="rubro-radio">
+                            <span class="radio-label text-sm font-medium">Seguros</span>
+                        </label>
+                        <label
+                            class="radio-item bg-gray-50 p-3 rounded-xl cursor-pointer border-2 border-gray-200 hover:border-blue-300 transition-all flex items-center gap-2">
+                            <input type="radio" name="rubro" value="mineria" class="rubro-radio">
+                            <span class="radio-label text-sm font-medium">Minería</span>
+                        </label>
+                        <label
+                            class="radio-item bg-gray-50 p-3 rounded-xl cursor-pointer border-2 border-gray-200 hover:border-blue-300 transition-all flex items-center gap-2">
+                            <input type="radio" name="rubro" value="energia" class="rubro-radio">
+                            <span class="radio-label text-sm font-medium">Energía</span>
+                        </label>
+                        <label
+                            class="radio-item bg-gray-50 p-3 rounded-xl cursor-pointer border-2 border-gray-200 hover:border-blue-300 transition-all flex items-center gap-2">
+                            <input type="radio" name="rubro" value="industria" class="rubro-radio">
+                            <span class="radio-label text-sm font-medium">Industria</span>
+                        </label>
+                        <label
+                            class="radio-item bg-gray-50 p-3 rounded-xl cursor-pointer border-2 border-gray-200 hover:border-blue-300 transition-all flex items-center gap-2">
+                            <input type="radio" name="rubro" value="agro" class="rubro-radio">
+                            <span class="radio-label text-sm font-medium">Agroindustria</span>
+                        </label>
+                        <label
+                            class="radio-item bg-gray-50 p-3 rounded-xl cursor-pointer border-2 border-gray-200 hover:border-blue-300 transition-all flex items-center gap-2">
+                            <input type="radio" name="rubro" value="servicios" class="rubro-radio">
+                            <span class="radio-label text-sm font-medium">Servicios</span>
+                        </label>
+                    </div>
+                </div>
 
                     <!-- Botones de Acción -->
                     <div class="grid grid-cols-2 gap-3 mb-5">
@@ -100,7 +143,7 @@
                             class="btn bg-gradient-primary text-white p-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5 hover:shadow-lg">
                             <i class="fas fa-search"></i> Extraer Datos
                         </button>
-                        <button type="button"
+                        <button type="button" id="btnAnalisis"
                             class="btn bg-gradient-secondary text-white p-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5 hover:shadow-lg"
                             onclick="analisis()">
                             <i class="fas fa-file-excel"></i> Analisis
@@ -189,6 +232,412 @@
     </div>
 
     <script>
+        // Datos de empresas categorizadas por rubro
+        const empresasPorRubro = {
+            bancos: [
+                "BANCO BBVA PERU",
+                "BANCO BCI PERU S.A. - BANCO BCI",
+                "BANCO DE COMERCIO",
+                "BANCO DE CREDITO DEL PERU",
+                "BANCO DE LA NACION",
+                "BANCO FALABELLA PERU S.A.",
+                "BANCO GNB PERU S.A.",
+                "BANCO INTERAMERICANO DE FINANZAS",
+                "BANCO INTERNACIONAL DEL PERU S.A.A. - INTERBANK",
+                "BANCO PICHINCHA",
+                "BANCO RIPLEY PERU S.A.",
+                "BANCO SANTANDER PERU S.A.",
+                "BANK OF CHINA (PERU) S.A.",
+                "COMPARTAMOS BANCO S.A.",
+                "ICBC PERU BANK",
+                "MIBANCO BANCO DE LA MICROEMPRESA S.A.",
+                "SCOTIABANK PERU S.A.A."
+            ],
+            seguros: [
+                "AVLA PERU COMPAÑIA DE SEGUROS S.A.",
+                "BNP PARIBAS CARDIF S.A. COMPAÑIA DE SEGUROS Y REASEGUROS",
+                "CESCE PERU S.A. COMPAÑIA DE SEGUROS",
+                "CHUBB PERU S.A. COMPAÑIA DE SEGUROS Y REASEGUROS",
+                "CRECER SEGUROS S.A. COMPANIA DE SEGUROS",
+                "INSUR S.A. COMPAÑIA DE SEGUROS",
+                "INTERSEGURO COMPAÑIA DE SEGUROS S.A.",
+                "LA POSITIVA SEGUROS Y REASEGUROS S.A.",
+                "LA POSITIVA VIDA SEGUROS Y REASEGUROS S.A.",
+                "LIBERTY SEGUROS S.A.",
+                "MAPFRE PERU COMPAÑIA DE SEGUROS Y REASEGUROS",
+                "OHIO NATIONAL SEGUROS DE VIDA Y REASEGUROS S.A.",
+                "PACIFICO COMPAÑIA DE SEGUROS Y REASEGUROS",
+                "PROTECTA S.A. COMPAÑIA DE SEGUROS Y REASEGUROS",
+                "QUALITAS COMPAÑIA DE SEGUROS S.A.",
+                "RIMAC SEGUROS Y REASEGUROS",
+                "VIVIR SEGUROS COMPAÑIA DE SEGUROS DE VIDA S.A."
+            ],
+            mineria: [
+                "ALTA COPPER CORP.",
+                "BEAR CREEK MINING CORPORATION",
+                "CASTROVIRREYNA COMPAÑIA MINERA S.A. EN LIQUIDACION",
+                "CERRO DE PASCO RESOURCES INC.",
+                "COMPAÑIA DE MINAS BUENAVENTURA S.A.A.",
+                "COMPAÑIA MINERA PODEROSA S.A.",
+                "COMPAÑIA MINERA SAN IGNACIO DE MOROCOCHA S.A.A.",
+                "COMPAÑIA MINERA SANTA LUISA S.A.",
+                "ELEMENT 29 RESOURCES INC.",
+                "MINERA ANDINA DE EXPLORACIONES S.A.A.",
+                "MINERA IRL LIMITED",
+                "MINSUR S.A.",
+                "NEXA RESOURCES ATACOCHA S.A.A.",
+                "NEXA RESOURCES PERU S.A.A.",
+                "PANORO MINERALS LTD.",
+                "PERUBAR S.A.",
+                "PPX MINING CORP.",
+                "REGULUS RESOURCES INC.",
+                "RIO2 LIMITED",
+                "SILVER MOUNTAIN RESOURCES INC.",
+                "SOCIEDAD MINERA CERRO VERDE S.A.A.",
+                "SOCIEDAD MINERA CORONA S.A.",
+                "SOCIEDAD MINERA EL BROCAL S.A.A.",
+                "SOUTHERN PERU COPPER CORPORATION, SUCURSAL DEL PERU",
+                "VOLCAN COMPAÑIA MINERA S.A.A."
+            ],
+            energia: [
+                "DUNAS ENERGIA S.A.A.",
+                "ELECTRO DUNAS S.A.A.",
+                "ELECTRO SUR ESTE S.A.A.",
+                "EMPRESA DE GENERACION ELECTRICA DEL SUR S.A.",
+                "EMPRESA DE GENERACION ELECTRICA SAN GABAN S.A.",
+                "EMPRESA ELECTRICIDAD DEL PERU - ELECTROPERU S.A.",
+                "EMPRESA REGIONAL DE SERVICIO PUBLICO DE ELECTRICIDAD - ELECTROSUR S.A.",
+                "EMPRESA REGIONAL DE SERVICIO PUBLICO DE ELECTRICIDAD DE PUNO S.A.A. - ELECTROPUNO",
+                "EMPRESA REGIONAL DE SERVICIO PUBLICO DE ELECTRICIDAD ELECTRONORTE MEDIO S.A. - HIDRANDINA",
+                "ENEL GENERACION PIURA S.A.",
+                "ENERGIA DEL PACIFICO S.A.",
+                "ENGIE ENERGIA PERU S.A.A.",
+                "LUZ DEL SUR S.A.A.",
+                "ORYGEN PERU S.A.A.",
+                "PERUANA DE ENERGIA S.A.A.",
+                "PLUZ ENERGIA PERU S.A.A.",
+                "RED DE ENERGIA DEL PERU S.A.",
+                "SHOUGANG GENERACION ELECTRICA S.A.A."
+            ],
+            industria: [
+                "ALICORP S.A.A.",
+                "AUSTRAL GROUP S.A.A.",
+                "CEMENTOS PACASMAYO S.A.A.",
+                "CORPORACION ACEROS AREQUIPA S.A.",
+                "EMPRESA SIDERURGICA DEL PERU S.A.A. - SIDERPERU",
+                "FABRICA NACIONAL DE ACUMULADORES ETNA S.A.",
+                "FABRICA PERUANA ETERNIT S.A.",
+                "FERREYCORP S.A.A.",
+                "FILAMENTOS INDUSTRIALES S.A.",
+                "HIDROSTAL S.A.",
+                "INDUSTRIAS ELECTRO QUIMICAS S.A. IEQSA",
+                "LAIVE S.A.",
+                "LECHE GLORIA S.A.",
+                "MANUFACTURA DE METALES Y ALUMINIO RECORD S.A.",
+                "MICHELL Y CIA. S.A.",
+                "QUIMPAC S.A.",
+                "REFINERIA LA PAMPILLA S.A.A.",
+                "TEXTIL SAN CRISTOBAL S.A. - EN LIQUIDACION",
+                "UNACEM CORP SOCIEDAD ANONIMA ABIERTA - UNACEM CORP S.A.A.",
+                "UNION DE CERVECERIAS PERUANAS BACKUS Y JOHNSTON S.A.A.",
+                "YURA S.A."
+            ],
+            agro: [
+                "AGRICOLA CAYALTI SOCIEDAD ANONIMA ABIERTA",
+                "AGRO INDUSTRIAL PARAMONGA S.A.",
+                "AGRO PUCALA S.A.A.",
+                "AGROINDUSTRIAL LAREDO S.A.A.",
+                "AGROINDUSTRIAS AIB S.A.",
+                "AGROINDUSTRIAS SAN JACINTO S.A.A.",
+                "CARTAVIO SOCIEDAD ANONIMA ABIERTA",
+                "CASA GRANDE SOCIEDAD ANONIMA ABIERTA",
+                "CENTRAL AZUCARERA CHUCARAPI-PAMPA BLANCA S.A.",
+                "EMPRESA AGRARIA AZUCARERA ANDAHUASI S.A.A.",
+                "EMPRESA AGRARIA CHIQUITOY S.A.",
+                "EMPRESA AGRICOLA GANADERA SALAMANCA S.A.A.",
+                "EMPRESA AGRICOLA LA UNION S.A.",
+                "EMPRESA AGRICOLA SAN JUAN S.A.",
+                "EMPRESA AGROINDUSTRIAL POMALCA S.A.A.",
+                "EMPRESA AGROINDUSTRIAL TUMAN S.A.A.",
+                "EMPRESA AZUCARERA EL INGENIO S.A.",
+                "PESQUERA EXALMAR S.A.A.",
+                "SOCIEDAD AGRICOLA FANUPE VICHAYAL S.A."
+            ],
+            servicios: [
+                "ADMINISTRADORA DEL COMERCIO S.A.",
+                "ADMINISTRADORA JOCKEY PLAZA SHOPPING CENTER S.A.",
+                "AENZA S.A.A.",
+                "AFP HABITAT S.A.",
+                "AFP INTEGRA",
+                "AI INVERSIONES PALO ALTO S.A.",
+                "ALFIN BANCO S.A.",
+                "ANDINO INVESTMENT HOLDING S.A.A.",
+                "AUNA S.A.",
+                "AZZARO TRADING S.A.",
+                "BOSQUES AMAZONICOS S.A.",
+                "CAJA MUNICIPAL DE AHORRO Y CREDITO CUSCO S.A. - CMAC CUSCO S.A.",
+                "CAJA MUNICIPAL DE AHORRO Y CREDITO DE AREQUIPA S.A.",
+                "CAJA MUNICIPAL DE AHORRO Y CREDITO DE HUANCAYO S.A.",
+                "CAJA RURAL DE AHORRO Y CREDITO LOS ANDES S.A.",
+                "CERVECERIA SAN JUAN S.A.",
+                "CITIBANK DEL PERU S.A.",
+                "COMPAÑIA UNIVERSAL TEXTIL S.A. EN LIQUIDACION",
+                "CONCESIONARIA TRASVASE OLMOS S.A.",
+                "CONSORCIO CEMENTERO DEL SUR S.A.",
+                "COPEN INVERSIONES S.A.",
+                "CORPORACION CERVESUR S.A.A.",
+                "CORPORACION FINANCIERA DE DESARROLLO S.A. - COFIDE",
+                "COSAPI S.A.",
+                "CREDICORP CAPITAL PERU S.A.A.",
+                "CREDICORP LTD.",
+                "CREDITEX S.A.A.",
+                "DESARROLLOS SIGLO XXI S.A.A.",
+                "DIVISO GRUPO FINANCIERO S.A.",
+                "EMPRESA DE CREDITOS SANTANDER CONSUMO PERU S.A.",
+                "EMPRESA EDITORA EL COMERCIO S.A.",
+                "EXPERTIA TRAVEL S.A.",
+                "FACTOTAL PERU S.A.",
+                "FALABELLA PERU S.A.A.",
+                "FINANCIERA CONFIANZA S.A.A.",
+                "FINANCIERA CREDINKA S.A. EN LIQUIDACION",
+                "FINANCIERA EFECTIVA S.A.",
+                "FINANCIERA OH! S.A.",
+                "FINANCIERA PROEMPRESA S.A.",
+                "FINANCIERA QAPAQ S.A.",
+                "FINANCIERA TFC S.A. EN LIQUIDACION",
+                "FONDO MIVIVIENDA S.A.",
+                "FOSFATOS DEL PACIFICO S.A.",
+                "FOSSAL S.A.A.",
+                "FUTURA CONSORCIO INMOBILIARIO S.A.",
+                "GR HOLDING S.A.",
+                "GRUPO BVL S.A.A.",
+                "HERMES TRANSPORTES BLINDADOS S.A.",
+                "HOLDING BURSATIL REGIONAL S.A.",
+                "H2OLMOS S.A.",
+                "INCA RAIL S.A.",
+                "INDECO S.A.",
+                "INDUSTRIA TEXTIL PIURA S.A.",
+                "INMOBILIARIA IDE S.A.",
+                "INMOBILIARIA SIC S.A.",
+                "INRETAIL PERU CORP.",
+                "INTEGRATEL PERU S.A.A. (ANTES TELEFONICA DEL PERU S.A.A.)",
+                "INTERCORP FINANCIAL SERVICES INC.",
+                "INVERFAL PERU S.A.A.",
+                "INVERPERU INMOBILIARIA S.A.A.",
+                "INVERSIONES CENTENARIO S.A.A.",
+                "INVERSIONES CORPORATIVAS A1 S.A. - INVERCORP A1 S.A.",
+                "INVERSIONES EN TURISMO S.A. INVERTUR",
+                "INVERSIONES PORTUARIAS CHANCAY S.A.A.",
+                "J.P. MORGAN BANCO DE INVERSION",
+                "LOS PORTALES S.A.",
+                "MITSUI AUTO FINANCE PERU S.A.",
+                "PERU HOLDING DE TURISMO S.A.A.",
+                "PETROLEOS DEL PERU - PETROPERU S.A.",
+                "PRIMA AFP S.A.",
+                "PROFUTURO AFP",
+                "PROMOINVEST SOCIEDAD ADMINISTRADORA DE FONDOS S.A.A.",
+                "PROMOTORA CLUB EMPRESARIAL S.A.",
+                "PVT PORTAFOLIO DE VALORES S.A.",
+                "RED BICOLOR DE COMUNICACIONES S.A.A. - RBC TV S.A.A.",
+                "RED VIAL 5 S.A.",
+                "SAGA FALABELLA S.A.",
+                "SANTANDER CONSUMER BANK S.A.",
+                "SANTANDER FINANCIAMIENTOS S.A.",
+                "SERVICIO DE AGUA POTABLE Y ALCANTARILLADO - SEDAPAL",
+                "SHOUGANG HIERRO PERU S.A.A.",
+                "SOLUCION EMPRESA ADMINISTRADORA HIPOTECARIA S.A.",
+                "STRACON HOLDINGS S.A.",
+                "TC SIGLO 21 S.A.A.",
+                "TOTAL SERVICIOS FINANCIEROS EMPRESA DE CREDITOS",
+                "TRADI S.A."
+            ]
+        };
+
+        // Función para inicializar el select con todas las empresas
+        function inicializarSelectEmpresas() {
+            const select = document.getElementById('company-select');
+            select.innerHTML = '<option value="">Seleccione una empresa</option>';
+
+            // Obtener todas las empresas únicas
+            const todasLasEmpresas = new Set();
+            Object.values(empresasPorRubro).forEach(empresas => {
+                empresas.forEach(empresa => todasLasEmpresas.add(empresa));
+            });
+
+            // Ordenar alfabéticamente y agregar al select
+            Array.from(todasLasEmpresas).sort().forEach(empresa => {
+                const option = document.createElement('option');
+                option.value = empresa;
+                option.textContent = empresa;
+                select.appendChild(option);
+            });
+        }
+
+        // Función para filtrar empresas según el rubro seleccionado
+        function filtrarEmpresasPorRubro(rubro) {
+            const select = document.getElementById('company-select');
+            const valorActual = select.value;
+
+            select.innerHTML = '<option value="">Seleccione una empresa</option>';
+
+            let empresasAFiltrar;
+            if (rubro === 'todos') {
+                // Obtener todas las empresas únicas
+                const todasLasEmpresas = new Set();
+                Object.values(empresasPorRubro).forEach(empresas => {
+                    empresas.forEach(empresa => todasLasEmpresas.add(empresa));
+                });
+                empresasAFiltrar = Array.from(todasLasEmpresas);
+            } else {
+                empresasAFiltrar = empresasPorRubro[rubro] || [];
+            }
+
+            // Ordenar y agregar empresas filtradas
+            empresasAFiltrar.sort().forEach(empresa => {
+                const option = document.createElement('option');
+                option.value = empresa;
+                option.textContent = empresa;
+                select.appendChild(option);
+            });
+
+            // Mantener el valor seleccionado si todavía está disponible
+            if (empresasAFiltrar.includes(valorActual)) {
+                select.value = valorActual;
+            }
+        }
+
+        // Event listeners para los radio buttons
+        document.addEventListener('DOMContentLoaded', function () {
+            inicializarSelectEmpresas();
+            cargarSeleccionDesdeLocalStorage();
+
+            // Agregar event listeners a los radio buttons
+            document.querySelectorAll('input[name="rubro"]').forEach(radio => {
+                radio.addEventListener('change', function () {
+                    filtrarEmpresasPorRubro(this.value);
+                });
+            });
+
+            // Estilo visual para radio buttons seleccionados
+            document.querySelectorAll('.rubro-radio').forEach(radio => {
+                radio.addEventListener('change', function () {
+                    // Remover estilos de todos
+                    document.querySelectorAll('.radio-item').forEach(item => {
+                        item.classList.remove('border-blue-500', 'bg-blue-50');
+                        item.classList.add('border-gray-200', 'bg-gray-50');
+                    });
+
+                    // Aplicar estilos al seleccionado
+                    if (this.checked) {
+                        const parent = this.closest('.radio-item');
+                        parent.classList.remove('border-gray-200', 'bg-gray-50');
+                        parent.classList.add('border-blue-500', 'bg-blue-50');
+                    }
+                });
+            });
+
+            // Aplicar estilo inicial al radio "Todos"
+            const radioTodos = document.querySelector('input[value="todos"]');
+            if (radioTodos.checked) {
+                const parent = radioTodos.closest('.radio-item');
+                parent.classList.remove('border-gray-200', 'bg-gray-50');
+                parent.classList.add('border-blue-500', 'bg-blue-50');
+            }
+
+        });
+
+        function guardarSeleccionEnLocalStorage() {
+            const empresaSeleccionada = document.getElementById('company-select').value;
+            const rubroSeleccionado = document.querySelector('input[name="rubro"]:checked').value;
+
+            const seleccion = {
+                empresa: empresaSeleccionada,
+                rubro: rubroSeleccionado,
+                timestamp: new Date().toISOString()
+            };
+
+            localStorage.setItem('ultimaSeleccionEmpresa', JSON.stringify(seleccion));
+            console.log('Selección guardada en localStorage:', seleccion);
+        }
+
+        // Función para cargar la última selección desde localStorage
+        function cargarSeleccionDesdeLocalStorage() {
+            const seleccionGuardada = localStorage.getItem('ultimaSeleccionEmpresa');
+
+            if (seleccionGuardada) {
+                try {
+                    const seleccion = JSON.parse(seleccionGuardada);
+
+                    // Restaurar el rubro seleccionado
+                    const radioRubro = document.querySelector(`input[name="rubro"][value="${seleccion.rubro}"]`);
+                    if (radioRubro) {
+                        radioRubro.checked = true;
+                        // Disparar el evento change para filtrar las empresas
+                        radioRubro.dispatchEvent(new Event('change'));
+                    }
+
+                    // Restaurar la empresa seleccionada después de que se carguen las opciones
+                    setTimeout(() => {
+                        const selectEmpresa = document.getElementById('company-select');
+                        if (seleccion.empresa && Array.from(selectEmpresa.options).some(opt => opt.value === seleccion.empresa)) {
+                            selectEmpresa.value = seleccion.empresa;
+                            addLog(`Selección restaurada: ${seleccion.empresa} (${seleccion.rubro})`);
+
+                            // Cargar archivos existentes para la empresa restaurada
+                            if (seleccion.empresa) {
+                                loadExistingFiles(seleccion.empresa);
+                            }
+                        }
+                    }, 100);
+
+                } catch (error) {
+                    console.error('Error al cargar selección desde localStorage:', error);
+                }
+            }
+        }
+
+        // Función actualizada para controlar el estado del botón de análisis
+        function updateAnalisisBtnState() {
+            const companySelect = document.getElementById('company-select');
+            const btnAnalisis = document.getElementById('btnAnalisis');
+            const empresaSeleccionada = companySelect.value;
+
+            if (!empresaSeleccionada) {
+                btnAnalisis.disabled = true;
+                btnAnalisis.classList.add('opacity-50', 'cursor-not-allowed');
+                return;
+            }
+
+            const archivosEmpresa = extractedFiles.filter(f => f.company === empresaSeleccionada);
+            const tiene5Archivos = archivosEmpresa.length === 5;
+
+            console.log(`Archivos para ${empresaSeleccionada}:`, archivosEmpresa.length);
+            console.log('Detalle de archivos:', archivosEmpresa.map(f => f.name));
+
+            btnAnalisis.disabled = !tiene5Archivos;
+            btnAnalisis.classList.toggle('opacity-50', !tiene5Archivos);
+            btnAnalisis.classList.toggle('cursor-not-allowed', !tiene5Archivos);
+
+            if (tiene5Archivos) {
+                btnAnalisis.title = 'Listo para análisis - Se encontraron 5 archivos';
+                addLog(`✅ ${empresaSeleccionada} tiene 5 archivos - Análisis habilitado`);
+            } else {
+                btnAnalisis.title = `Se necesitan 5 archivos para análisis (actual: ${archivosEmpresa.length})`;
+            }
+        }
+
+
+        function limpiarSeleccionStorage() {
+            localStorage.removeItem('ultimaSeleccionEmpresa');
+            console.log('Selección limpiada de localStorage');
+        }
+
+        // Función para verificar el estado actual del localStorage
+        function verificarEstadoStorage() {
+            const seleccion = localStorage.getItem('ultimaSeleccionEmpresa');
+            console.log('Estado actual del localStorage:', seleccion);
+            return seleccion ? JSON.parse(seleccion) : null;
+        }
         // Variables globales
         let extractedFiles = [];
         let currentExtractionId = null;
@@ -214,9 +663,18 @@
             return {
                 company: companySelect.value,
                 companyName: selectedOption.text,
-                anios: [2024, 2022, 2020] // Años por defecto
             };
         }
+
+        /* function updateAnalisisBtnState() {
+             const companySelect = document.getElementById('company-select');
+             const btnAnalisis = document.getElementById('btnAnalisis');
+             console.log('Archivos extraídos:', extractedFiles.filter(f => f.company === companySelect.value).length);
+             btnAnalisis.disabled = extractedFiles.filter(f => f.company === companySelect.value).length !== 5;
+             btnAnalisis.classList.toggle('opacity-50', extractedFiles.filter(f => f.company === companySelect.value).length !== 5);
+         } */
+
+
 
         // Validar datos del formulario
         function validateFormData(data) {
@@ -284,7 +742,7 @@
                 // Verificar archivos en tiempo real
                 checkForNewFiles();
 
-            }, 3000); // Verificar cada 3 segundos
+            }, 1000); // Verificar cada 1 segundos
         }
 
         // Verificar nuevos archivos en la carpeta
@@ -329,6 +787,7 @@
                             addLog(`Archivo encontrado: ${file.name}`);
                             displayFiles();
                             updateStats();
+                            updateAnalisisBtnState();
                         }
                     });
                 }
@@ -420,6 +879,7 @@
                     }
                 });
             }
+            checkForNewFiles();
 
             updateProgress(100);
             showStatus(`Extracción completada. ${extractedFiles.filter(f => f.company === data.companyName).length} archivos extraídos exitosamente.`, 'success');
@@ -427,7 +887,6 @@
 
             // Actualizar estadísticas
             updateStats();
-
             // Mostrar archivos
             displayFiles();
 
@@ -440,7 +899,10 @@
 
         // Cargar archivos existentes de una empresa
         async function loadExistingFiles(companyName) {
-            const companyClean = companyName.replace(/[^a-zA-Z0-9\s\-_]/g, '').replace(/\s+/g, '_');
+            const companyClean = companyName
+            .replace(/[^a-zA-Z0-9áéíóúüÁÉÍÓÚÜñÑ\s\-_]/g, '')  
+            .replace(/\s+/g, '_');
+            console.log('Cargando archivos existentes para:', companyName, 'en ruta:', companyClean);
             currentDownloadPath = `descargas_smv/${companyClean}`;
 
             try {
@@ -487,10 +949,11 @@
 
                 displayFiles();
                 updateStats();
-
+                updateAnalisisBtnState();
             } catch (error) {
                 console.error('Error cargando archivos existentes:', error);
                 addLog('Error al cargar archivos existentes: ' + error.message);
+                updateAnalisisBtnState();
             }
         }
 
@@ -549,9 +1012,6 @@
                 </button>
                 <button class="btn bg-green-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-green-600 transition-colors" onclick="downloadFile('${file.id}')">
                     <i class="fas fa-download"></i> Descargar
-                </button>
-                <button class="btn bg-red-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-red-600 transition-colors" onclick="deleteFile('${file.id}')">
-                    <i class="fas fa-trash"></i>
                 </button>
             </div>
         </div>
@@ -822,10 +1282,24 @@
                 if (selectedOption.value) {
                     addLog(`Empresa cambiada a: ${selectedOption.text}`);
                     loadExistingFiles(selectedOption.text);
+
                 } else {
                     displayFiles();
                     updateStats();
                 }
+                updateAnalisisBtnState();
+            });
+        }
+
+        function setupRadioButtonsListener() {
+            document.querySelectorAll('input[name="rubro"]').forEach(radio => {
+                radio.addEventListener('change', function () {
+                    // Guardar selección en localStorage cuando cambia el rubro
+                    setTimeout(() => {
+                        guardarSeleccionEnLocalStorage();
+                        updateAnalisisBtnState();
+                    }, 100);
+                });
             });
         }
 
@@ -851,7 +1325,7 @@
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        carpeta_empresa: carpetaEmpresa 
+                        carpeta_empresa: carpetaEmpresa
                     })
                 });
 
@@ -874,7 +1348,7 @@
                 showStatus('Error de conexión con el servidor. Verifique la red.', 'error');
                 addLog(`ERROR DE CONEXIÓN: ${error}`);
             }
-            
+
         }
 
         // Crear tabla HTML desde datos de Excel
@@ -920,6 +1394,7 @@
                 closeModal();
             }
         });
+
     </script>
 </body>
 

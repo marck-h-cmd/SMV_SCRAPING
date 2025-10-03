@@ -97,7 +97,9 @@ class SMVFinancialScraper:
                     raise
     
     def setup_empresa_download_folder(self, empresa_nombre):
-        empresa_clean = "".join(c for c in empresa_nombre if c.isalnum() or c in (' ', '-', '_')).rstrip()
+        caracteres_permitidos = set("abcdefghijklmnñopqrstuvwxyzABCDEFGHIJKLMNÑOPQRSTUVWXYZáéíóúüÁÉÍÓÚÜ0123456789 -_")
+    
+        empresa_clean = "".join(c for c in empresa_nombre if c in caracteres_permitidos).rstrip()
         empresa_clean = empresa_clean.replace(' ', '_')
         
         empresa_path = os.path.join(self.download_path, empresa_clean)
@@ -119,6 +121,7 @@ class SMVFinancialScraper:
         self.current_download_path = empresa_path
         return empresa_path
     
+
     def rename_downloaded_file(self, anio):
         try:
             time.sleep(3)
@@ -130,7 +133,7 @@ class SMVFinancialScraper:
             new_files = files_after - files_before
             if not new_files:
                 all_files = [f for f in os.listdir(self.current_download_path) 
-                           if f.endswith(('.xls', '.xlsx')) and not f.startswith(str(anio))]
+                        if f.endswith(('.xls', '.xlsx')) and not f.startswith(str(anio))]
                 if all_files:
                     all_files.sort(key=lambda x: os.path.getmtime(os.path.join(self.current_download_path, x)), reverse=True)
                     new_files = {all_files[0]}
@@ -139,23 +142,129 @@ class SMVFinancialScraper:
                 if filename.endswith(('.xls', '.xlsx')) and not filename.startswith('.'):
                     old_path = os.path.join(self.current_download_path, filename)
                     
+                    # Determinar si necesitamos convertir de .xls a .xlsx
                     file_extension = os.path.splitext(filename)[1]
-                    new_filename = f"{anio}-{filename}"
-                    new_path = os.path.join(self.current_download_path, new_filename)
                     
-                    counter = 1
-                    while os.path.exists(new_path):
-                        name_without_ext = os.path.splitext(filename)[0]
-                        new_filename = f"{anio}-{name_without_ext}_{counter}{file_extension}"
+                    if file_extension == '.xls':
+                        # Convertir .xls a .xlsx usando el método de pd.read_html
+                        try:
+                            import pandas as pd
+                            from openpyxl import load_workbook
+                            from SMV_APP.analisis  import (
+                                FormatoSituacionFinanciera,
+                                FormatoResultados,
+                                FormatoPatrimonio,
+                                FormatoFlujoEfectivo
+                            )
+                            
+                            # Crear el nuevo nombre con .xlsx
+                            new_filename = f"{anio}-{os.path.splitext(filename)[0]}.xlsx"
+                            new_path = os.path.join(self.current_download_path, new_filename)
+                            
+                            # Verificar si el archivo ya existe
+                            if os.path.exists(new_path):
+                                self.logger.info(f"Archivo ya existe, omitiendo: {new_filename}")
+                                os.remove(old_path)
+                                self.logger.info(f"Archivo descargado eliminado: {filename}")
+                                return
+                            
+                            # Obtener nombre de empresa de la carpeta
+                            dir_path = os.path.dirname(old_path)
+                            nombre = os.path.basename(dir_path)
+                            nombreEmpresa = nombre.replace('_', ' ')
+                            
+                            # Leer todas las tablas del archivo .xls
+                            tablas = pd.read_html(old_path)
+                            
+                            # 1. GUARDAR DATAFRAME
+                            with pd.ExcelWriter(new_path, engine="openpyxl") as writer:
+                                for i, df in enumerate(tablas, start=1):
+                                    
+                                    if df.shape[1] >= 4 and i != 3:  # TODOS MENOS LA DE PATRIMONIO O FIRMANTES ELIMINAN LA COLUMNA B
+                                        df_cleaned = df.drop(df.columns[[1, 3]], axis=1, errors='ignore')
+                                    else:
+                                        df_cleaned = df
+                                    
+                                    def clean_and_coerce(series):
+                                        s = series.astype(str)
+                                        s = s.str.replace('(', '-', regex=False).str.replace(')', '', regex=False)
+                                        s = s.str.replace(',', '', regex=False)
+                                        return pd.to_numeric(s, errors='coerce')
+                                    
+                                    if df_cleaned.shape[1] >= 3 and (i != 3 and i != 6):
+                                        df_cleaned.iloc[:, [1, 2]] = df_cleaned.iloc[:, [1, 2]].apply(clean_and_coerce)
+                                    else:
+                                        df_cleaned.iloc[:, 2:df_cleaned.shape[1]] = df_cleaned.iloc[:, 2:df_cleaned.shape[1]].apply(clean_and_coerce)
+                                    
+                                    df_cleaned.to_excel(
+                                        writer, 
+                                        sheet_name=f"Hoja{i}", 
+                                        index=False,
+                                        header=True,
+                                        startrow=6,
+                                        startcol=2
+                                    )
+                            
+                            # 2. Declaración de hojas de ESTADOS:
+                            wb = load_workbook(new_path)
+                            situaFinanciera = wb['Hoja1']
+                            estaresultados = wb['Hoja2']
+                            patrimonio = wb['Hoja3']
+                            flujoEfectivo = wb['Hoja4']
+                            
+                            # 3. ABRIR CON OPENPYXL PARA APLICAR ESTILOS MANUALES
+                            FormatoSituacionFinanciera(situaFinanciera, nombreEmpresa)
+                            FormatoResultados(estaresultados, nombreEmpresa)
+                            FormatoPatrimonio(wb, patrimonio, nombreEmpresa)
+                            FormatoFlujoEfectivo(flujoEfectivo, nombreEmpresa)
+                            
+                            # 4. ELIMINAR HOJAS QUE NO SON NECESARIAS
+                            if len(tablas) >= 5:
+                                wb.remove(wb['Hoja5'])
+                            if len(tablas) >= 6:
+                                wb.remove(wb['Hoja6'])
+                            
+                            # 5. Guardar el archivo con estilos
+                            wb.save(new_path)
+                            
+                            # Eliminar el archivo .xls original
+                            os.remove(old_path)
+                            self.logger.info(f"Archivo convertido y formateado: {filename} -> {new_filename}")
+                            
+                        except Exception as e:
+                            self.logger.error(f"Error al convertir archivo .xls a .xlsx: {e}")
+                            # Si falla la conversión, simplemente renombrar sin convertir
+                            new_filename = f"{anio}-{filename}"
+                            new_path = os.path.join(self.current_download_path, new_filename)
+                            
+                            if os.path.exists(new_path):
+                                self.logger.info(f"Archivo ya existe, omitiendo: {new_filename}")
+                                os.remove(old_path)
+                                self.logger.info(f"Archivo descargado eliminado: {filename}")
+                                return
+                            
+                            os.rename(old_path, new_path)
+                            self.logger.info(f"Archivo renombrado sin conversión: {filename} -> {new_filename}")
+                    
+                    else:  # file_extension == '.xlsx'
+                        new_filename = f"{anio}-{filename}"
                         new_path = os.path.join(self.current_download_path, new_filename)
-                        counter += 1
+                        
+                        # Verificar si el archivo ya existe
+                        if os.path.exists(new_path):
+                            self.logger.info(f"Archivo ya existe, omitiendo: {new_filename}")
+                            os.remove(old_path)
+                            self.logger.info(f"Archivo descargado eliminado: {filename}")
+                            return
+                        
+                        os.rename(old_path, new_path)
+                        self.logger.info(f"Archivo renombrado: {filename} -> {new_filename}")
                     
-                    os.rename(old_path, new_path)
-                    self.logger.info(f"Archivo renombrado: {filename} -> {new_filename}")
                     break
+                    
         except Exception as e:
             self.logger.error(f"Error al renombrar archivo: {e}")
-    
+            
     def select_empresa(self, empresa_nombre):
         try:
             self.logger.info(f"Seleccionando empresa: {empresa_nombre}")

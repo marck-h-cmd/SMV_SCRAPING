@@ -9,3 +9,6 @@ xlsxwriter
 lxml
 psutil
 pytesseract
+matplotlib
+Pillow
+google-generativeai
