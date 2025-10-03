@@ -13,3 +13,6 @@ matplotlib
 Pillow
 google-generativeai
 reportlab
+gunicorn
+cryptography
+whitenoise
