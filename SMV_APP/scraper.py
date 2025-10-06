@@ -215,7 +215,7 @@ class SMVFinancialScraper:
                             # 3. ABRIR CON OPENPYXL PARA APLICAR ESTILOS MANUALES
                             FormatoSituacionFinanciera(situaFinanciera, nombreEmpresa)
                             FormatoResultados(estaresultados, nombreEmpresa)
-                            FormatoPatrimonio(wb, patrimonio, nombreEmpresa)
+                            FormatoPatrimonio(patrimonio, nombreEmpresa)
                             FormatoFlujoEfectivo(flujoEfectivo, nombreEmpresa)
                             
                             # 4. ELIMINAR HOJAS QUE NO SON NECESARIAS

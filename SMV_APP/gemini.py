@@ -72,8 +72,10 @@ class FinancialStatementAnalyzer:
            - Oportunidades de mejora detectadas
            - Recomendaciones accionables
 
-        Usa terminología financiera precisa y parrafos cortos respondiendo.
+        Usa terminología financiera precisa y párrafos cortos respondiendo.
         Estructura tu respuesta claramente en las cuatro secciones solicitadas solamente.
+        No uses formato markdown como asteriscos, negritas o cualquier otro estilo de texto especial.
+        Escribe el texto de forma plana, sin ningún tipo de formato.
         """
     
     def read_excel_file(self, file_path):
@@ -89,21 +91,15 @@ class FinancialStatementAnalyzer:
         except Exception as e:
             raise Exception(f"Error al leer el archivo Excel: {str(e)}")
     
-    def describe_financial_data(self, df, sheet_name):
-        description = f"HOJA: {sheet_name}\n"
-        description += f"Dimensiones: {df.shape[0]} filas × {df.shape[1]} columnas\n"
+    def format_dataframe_content(self, df, sheet_name):
+        content = f"HOJA: {sheet_name}\n"
+        content += f"Dimensiones: {df.shape[0]} filas × {df.shape[1]} columnas\n\n"
         
-        description += "Columnas financieras:\n"
-        for col in df.columns:
-            description += f"- {col}\n"
+        content += "DATOS COMPLETOS:\n"
+        content += df.to_string(index=False)
+        content += "\n\n"
         
-        numeric_cols = df.select_dtypes(include=['number']).columns
-        if len(numeric_cols) > 0:
-            description += "\nResumen numérico:\n"
-            for col in numeric_cols[:5]:
-                description += f"- {col}: min={df[col].min():.2f}, max={df[col].max():.2f}, avg={df[col].mean():.2f}\n"
-        
-        return description
+        return content
     
     def analyze_financial_statements(self, file_path):
         try:
@@ -115,8 +111,8 @@ class FinancialStatementAnalyzer:
             data_context = f"ANÁLISIS DE ESTADOS FINANCIEROS: {os.path.basename(file_path)}\n\n"
             
             for sheet_name, df in sheets.items():
-                data_context += self.describe_financial_data(df, sheet_name)
-                data_context += "\n" + "-"*50 + "\n\n"
+                data_context += self.format_dataframe_content(df, sheet_name)
+                data_context += "-"*80 + "\n\n"
             
             analysis_prompt = f"""
             {data_context}
@@ -128,7 +124,7 @@ class FinancialStatementAnalyzer:
             3. ¿Cómo se relacionan los cambios en los ratios con el análisis vertical y horizontal ya realizado?
             4. ¿Qué señales deberían llamar la atención de la gerencia?
             
-            Proporciona un análisis detallado para cada punto.
+            Proporciona un análisis detallado para cada punto
             """
             
             response = self.model.generate_content(analysis_prompt)
@@ -138,22 +134,14 @@ class FinancialStatementAnalyzer:
         except Exception as e:
             return f"Error en el análisis financiero: {str(e)}"
 
-def main():
+if __name__ == "__main__":
     analyzer = FinancialStatementAnalyzer()
     
-    excel_files = [r"C:\Users\FELIX\Desktop\CICLO 6\FINANZAS CORPORATIVAS\PROYECTO\SMV_SCRAPING\descargas_smv\ALICORP_SAA\ANALISIS\ANALISIS-ALICORP_SAA.xlsx"]    
+    excel_file_path = "estados_financieros.xlsx"
     
-    for file_path in excel_files:
-        if os.path.exists(file_path):
-            print(f"\n{'='*80}")
-            print(f"ANALIZANDO: {file_path}")
-            print(f"{'='*80}\n")
-            
-            analysis = analyzer.analyze_financial_statements(file_path)
-            print(analysis)
-            print(f"\n{'='*80}\n")
-        else:
-            print(f"Archivo no encontrado: {file_path}")
-
-if __name__ == "__main__":
-    main()
+    if os.path.exists(excel_file_path):
+        print("Analizando estados financieros...\n")
+        result = analyzer.analyze_financial_statements(excel_file_path)
+        print(result)
+    else:
+        print(f"Error: No se encontró el archivo '{excel_file_path}'")

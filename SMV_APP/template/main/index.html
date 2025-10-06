@@ -743,7 +743,9 @@
             addLog('Iniciando extracción para: ' + data.companyName);
 
             // Configurar path de descarga esperado
-            const companyClean = data.companyName.replace(/[^a-zA-Z0-9\s\-_]/g, '').replace(/\s+/g, '_');
+            const companyClean = data.companyName
+             .replace(/[^a-zA-Z0-9áéíóúüÁÉÍÓÚÜñÑ\s\-_]/g, '')  
+                .replace(/\s+/g, '_');
             currentDownloadPath = `descargas_smv/${companyClean}`;
             if (!currentDownloadPath.exists) {
                 addLog('Error: Ruta de descarga inválida');
@@ -1071,7 +1073,7 @@ function mostrarPanelAnalisis() {
     document.getElementById('analisisFileSize').textContent = `Tamaño: ${sizeMB} MB`;
     
     // Generar conclusiones dinámicas
-    generarConclusiones(null);
+    generarConclusiones('Se genero pdf con conclusiones del análisis financiero de la empresa ' + currentAnalisisFile.empresa + '.');
 }
 
 // Ocultar panel de análisis
@@ -1514,8 +1516,8 @@ async function descargarAnalisis() {
                 if (response.ok && result.status === 'success') {
                     showStatus(result.message, 'success');
                     addLog(`✅ ${result.message}`);
-                    generarConclusiones(result.conclusion || 'Análisis completado. Revise el archivo de análisis para más detalles.');
-
+                  //  generarConclusiones(result.conclusion || 'Análisis completado. Revise el archivo de análisis para más detalles.');
+                    await checkAnalisisFile(carpetaEmpresa);
                 } else {
                     showStatus(`Error en el análisis: ${result.message || 'Error desconocido'}`, 'error');
                     addLog(`ERROR: ${result.message || 'Error de servidor'}`);

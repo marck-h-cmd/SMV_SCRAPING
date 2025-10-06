@@ -63,7 +63,10 @@ def verificar_archivos(request):
                     file_path = os.path.join(full_path, filename)
                     
           
-                    if filename.lower().endswith(( '.xls')):
+                    if filename.lower().endswith(( '.xlsx')):
+                        
+                        if filename.startswith('~$'):
+                            continue
                         try:
                             stat = os.stat(file_path)
                             
@@ -267,13 +270,15 @@ def analisis(request):
         # 2. Construir la carpeta base
         DIR_BASE_FINANCIEROS = os.path.join("descargas_smv", empresa_clean)
 
-        formato_xls_xlsx(DIR_BASE_FINANCIEROS)
+        # formato_xls_xlsx(DIR_BASE_FINANCIEROS)
 
         archivos_por_anio = {}
         year_pattern = re.compile(r"^(\d{4})") 
 
         # 3. Listar todos los archivos en el directorio de la empresa
         for filename in os.listdir(DIR_BASE_FINANCIEROS):
+            if filename.startswith('~$'):
+                continue
             if filename.lower().endswith(('.xlsx')):
                 match = year_pattern.match(filename)
                 if match:
